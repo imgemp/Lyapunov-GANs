@@ -1,2 +1,2 @@
-# Crossing-the-Curl
-Code for NIPS '18 Submission
+# Lyapunov-GANs
+Code for last chapter of thesis

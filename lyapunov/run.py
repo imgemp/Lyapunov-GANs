@@ -140,9 +140,12 @@ def parse_params():
     # args['maps'] = [RMSProp, SimGD]
     # args['maps'] = [SimGD]
     args['K'] = 2
-    args['psi_epsilon'] = 1e-3
+    args['psi_epsilon'] = 1e-4
     args['gs_freq'] = 1
     args['start_lam_it'] = 4500
+
+    # python lyapunov/run.py $(cat examples/args/MO8G/con/exp-con-25.txt) -alg consensus -verb True -bs 512 -d_lr 1e-3 -g_lr 1e-3 -gam 1 -d_nonlin leaky_relu -g_nonlin leaky_relu -mx_it 5001 -dom CLGaussian -xdim 1 -zdim 1 -mx_it 10000 -d_lr 1e-6 -g_lr 1e-6
+    # python lyapunov/run.py $(cat examples/args/MO8G/con/exp-con-25.txt) -alg consensus -verb True -bs 512 -d_lr 1e-3 -g_lr 1e-3 -gam 1 -d_nonlin leaky_relu -g_nonlin leaky_relu -mx_it 5001
 
     return Train, Domain, Generator, Discriminator, args
 

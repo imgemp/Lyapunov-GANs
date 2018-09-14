@@ -63,7 +63,7 @@ class GNet(nn.Module):
         return None
 
     def get_param_data(self):
-        return [p.data for p in self.parameters()]
+        return [p.data.detach() for p in self.parameters()]
 
     def set_param_data(self, data, req_grad=False):
         for p,d in zip(self.parameters(),data):
@@ -109,7 +109,7 @@ class DNet(nn.Module):
             layer.bias.data.zero_()
 
     def get_param_data(self):
-        return [p.data for p in self.parameters()]
+        return [p.data.detach() for p in self.parameters()]
 
     def set_param_data(self, data, req_grad=False):
         for p,d in zip(self.parameters(),data):
@@ -226,11 +226,11 @@ class Train(object):
         psi_split = np.split(psi, indices_or_sections=np.cumsum(2*(d_dims+g_dims))[:-1], axis=0)
 
         Ks = range(self.K)
-        self.psi_d = [[torch.FloatTensor(psi_split[i][:,k].reshape(*d_shapes[i])) for i in range(len(d_dims))] for k in Ks]
-        self.psi_g = [[torch.FloatTensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i])) for i in range(len(g_dims))] for k in Ks]
+        self.psi_d = [[torch.FloatTensor(psi_split[i][:,k].reshape(*d_shapes[i]), requires_grad=False) for i in range(len(d_dims))] for k in Ks]
+        self.psi_g = [[torch.FloatTensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i]), requires_grad=False) for i in range(len(g_dims))] for k in Ks]
         if self.req_aux:
-            self.psi_d_a = [[torch.FloatTensor(psi_split[i+len(d_dims)+len(g_dims)][:,k].reshape(*d_shapes[i])) for i in range(len(d_dims))] for k in Ks]
-            self.psi_g_a = [[torch.FloatTensor(psi_split[i+2*len(d_dims)+len(g_dims)][:,k].reshape(*g_shapes[i])) for i in range(len(g_dims))] for k in Ks]
+            self.psi_d_a = [[torch.FloatTensor(psi_split[i+len(d_dims)+len(g_dims)][:,k].reshape(*d_shapes[i]), requires_grad=False) for i in range(len(d_dims))] for k in Ks]
+            self.psi_g_a = [[torch.FloatTensor(psi_split[i+2*len(d_dims)+len(g_dims)][:,k].reshape(*g_shapes[i]), requires_grad=False) for i in range(len(g_dims))] for k in Ks]
 
         self.lams = np.zeros(self.K)
 
@@ -250,8 +250,8 @@ class Train(object):
 
         if self.req_aux:
             # 2. Record aux
-            daux = [p.data for p in self.aux_d]
-            gaux = [p.data for p in self.aux_g]
+            daux = [p.data.detach() for p in self.aux_d]
+            gaux = [p.data.detach() for p in self.aux_g]
 
         # 3. Get real data and samples from p(z) to pass to generator
         if it == self.m.params['start_lam_it']:

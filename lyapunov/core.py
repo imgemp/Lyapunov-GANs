@@ -226,11 +226,11 @@ class Train(object):
         psi_split = np.split(psi, indices_or_sections=np.cumsum(2*(d_dims+g_dims))[:-1], axis=0)
 
         Ks = range(self.K)
-        self.psi_d = [[torch.FloatTensor(psi_split[i][:,k].reshape(*d_shapes[i]), requires_grad=False) for i in range(len(d_dims))] for k in Ks]
-        self.psi_g = [[torch.FloatTensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i]), requires_grad=False) for i in range(len(g_dims))] for k in Ks]
+        self.psi_d = [[self.m.to_gpu(torch.Tensor(psi_split[i][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
+        self.psi_g = [[self.m.to_gpu(torch.Tensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
         if self.req_aux:
-            self.psi_d_a = [[torch.FloatTensor(psi_split[i+len(d_dims)+len(g_dims)][:,k].reshape(*d_shapes[i]), requires_grad=False) for i in range(len(d_dims))] for k in Ks]
-            self.psi_g_a = [[torch.FloatTensor(psi_split[i+2*len(d_dims)+len(g_dims)][:,k].reshape(*g_shapes[i]), requires_grad=False) for i in range(len(g_dims))] for k in Ks]
+            self.psi_d_a = [[self.m.to_gpu(torch.Tensor(psi_split[i+len(d_dims)+len(g_dims)][:,k].reshape(*d_shapes[i])).astype('float32'), requires_grad=False) for i in range(len(d_dims))] for k in Ks]
+            self.psi_g_a = [[self.m.to_gpu(torch.Tensor(psi_split[i+2*len(d_dims)+len(g_dims)][:,k].reshape(*g_shapes[i])).astype('float32'), requires_grad=False) for i in range(len(g_dims))] for k in Ks]
 
         self.lams = np.zeros(self.K)
 

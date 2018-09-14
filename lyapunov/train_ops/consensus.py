@@ -13,9 +13,11 @@ class Consensus(Map):
         norm = 0.5*(norm_d+norm_g)
         # if discriminator last layer is linear and div is Wasserstein then the Discriminator bias
         # (constant weight vector) disappears from minimax objective
-        norm_d_grad = torch.autograd.grad(norm, self.m.D.parameters(), create_graph=True, allow_unused=True)
-        norm_g_grad = torch.autograd.grad(norm, self.m.G.parameters(), create_graph=True)
-        gammaJTF_d = [self.m.params['gamma']*g if g is not None else torch.zeros_like(p) for g,p in zip(norm_d_grad, self.m.D.parameters())]
+        norm_d_grad = torch.autograd.grad(norm, self.m.D.parameters(), retain_graph=True, allow_unused=True)
+        norm_g_grad = torch.autograd.grad(norm, self.m.G.parameters(), retain_graph=False)
+        # gammaJTF_d = [self.m.params['gamma']*g.detach() if g is not None else 0*p.detach() for g,p in zip(norm_d_grad, self.m.D.parameters())]
+        # gammaJTF_g = [self.m.params['gamma']*g.detach() for g in norm_g_grad]
+        gammaJTF_d = [self.m.params['gamma']*g if g is not None else 0*p for g,p in zip(norm_d_grad, self.m.D.parameters())]
         gammaJTF_g = [self.m.params['gamma']*g for g in norm_g_grad]
 
         # 2. Sum terms

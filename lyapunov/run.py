@@ -19,6 +19,10 @@ from lyapunov.core import Manager
 from lyapunov.utils import gpu_helper, save_weights, load_weights
 
 from tqdm import tqdm
+import os
+import psutil
+process = psutil.Process(os.getpid())
+
 from IPython import embed
 
 def parse_params():
@@ -120,6 +124,7 @@ def parse_params():
     saveto = args['saveto'] + '/' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S/{}').format('')
     if not os.path.exists(saveto):
         os.makedirs(saveto)
+        os.makedirs(saveto+'/samples')
     shutil.copy(os.path.realpath('lyapunov/run.py'), os.path.join(saveto, 'run.py'))
     shutil.copy(os.path.realpath('lyapunov/core.py'), os.path.join(saveto, 'core.py'))
     for mp in args['map_strings']:
@@ -176,7 +181,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         lams, d, g, f = train.train_op(i)
         
         if params['verbose']:
-            iterations.set_postfix({'Lambda':lams,'||F_D||^2':d,'||F_G||^2':g,'V':f})
+            iterations.set_postfix({'Lambda':lams,'||F_D||^2':d,'||F_G||^2':g,'V':f, 'Mem': process.memory_info().rss})
 
         fs.append(f)
         ds.append(d)
@@ -186,7 +191,8 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
 
         if viz_every > 0 and i % viz_every == 0:
             if params['n_viz'] > 0:
-                np_samples.append(train.m.get_fake(params['n_viz'], params['z_dim']).cpu().data.numpy())
+                # np_samples.append(train.m.get_fake(params['n_viz'], params['z_dim']).cpu().data.numpy())
+                np.save(params['saveto']+'samples/'+str(i), train.m.get_fake(params['n_viz'], params['z_dim']).cpu().data.numpy())
             data.plot_current(train, params, i)
             if i >= params['start_lam_it']:
                 fig = plt.figure()
@@ -194,8 +200,8 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
                 fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
                 plt.close(fig)
 
-        if params['series_every'] > 0 and params['n_viz'] > 0 and i % params['series_every'] == 0:
-            data.plot_series(np_samples, params)
+        # if params['series_every'] > 0 and params['n_viz'] > 0 and i % params['series_every'] == 0:
+        #     data.plot_series(np_samples, params)
 
         if params['weights_every'] > 0 and i % params['weights_every'] == 0:
             save_weights(m.D,params['saveto']+'D_'+str(i)+'.pkl')
@@ -223,6 +229,9 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
 
     print('Plotting sample series over epochs...')
     if params['n_viz'] > 0:
+        np_samples = []
+        for viz_i in range(0,params['max_iter'],viz_every):
+            np_samples.append(np.load(params['saveto']+'samples/'+str(viz_i)+'.npy'))
         data.plot_series(np_samples, params)
 
     print('Plotting loss...')

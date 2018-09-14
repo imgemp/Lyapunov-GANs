@@ -70,6 +70,7 @@ class Synthetic(Data):
             plt.title('step %d'%(i*params['viz_every']))
         plt.gcf().tight_layout()
         fig.savefig(params['saveto']+'series.pdf')
+        plt.close(fig)
 
 
 class SwissRoll(Synthetic):

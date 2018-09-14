@@ -1,0 +1,18 @@
+-dom MO8G
+-bs 512
+-div Wasserstein
+-d_lr 1e-3
+-d_nh 16
+-d_nl 4
+-d_nonlin leaky_relu
+-g_lr 1e-3
+-g_nh 16
+-g_nl 4
+-g_nonlin leaky_relu
+-mx_it 5001
+-viz_every 100
+-zdim 16
+-xdim 2
+-gam 1.
+-maps rmsprop consensus
+-saveto examples/results/MO8G/rmsprop_con/

@@ -1,0 +1,26 @@
+-dom MO25G
+-desc 20
+-alg con
+-bs 256
+-div Wasserstein
+-d_op Adam
+-d_lr 1e-4
+-d_nh 512
+-d_nl 3
+-d_l2 0.
+-d_nonlin relu
+-d_quad False
+-g_opt Adam
+-g_lr 1e-4
+-g_nh 512
+-g_nl 3
+-g_nonlin relu
+-betas 0.5 0.9
+-eps 1e-8
+-mx_it 100001
+-viz_every 1000
+-zdim 2
+-xdim 2
+-gam 1.
+-step 1e-4
+-verb True

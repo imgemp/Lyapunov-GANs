@@ -1,0 +1,19 @@
+-desc exp-simgd-01
+-alg simgd
+-bs 512
+-div JS
+-d_op Adam
+-d_lr 1e-3
+-d_nh 16
+-d_nl 4
+-g_opt Adam
+-g_lr 1e-3
+-g_nh 16
+-g_nl 4
+-betas 0.5 0.999
+-eps 1e-8
+-mx_it 100001
+-viz_every 1000
+-zdim 16
+-xdim 2
+-saveto results/simgd/exp01/

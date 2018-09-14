@@ -1,0 +1,22 @@
+-dom MNIST
+-desc 00
+-alg con
+-bs 50
+-div JS
+-d_op Adam
+-d_lr 1e-4
+-g_opt Adam
+-g_lr 1e-4
+-betas 0.5 0.999
+-eps 1e-8
+-mx_it 200001
+-viz_every 1000
+-series_every 25000
+-w_every 25000
+-n_viz 5
+-zdim 128
+-xdim 784
+-gam 10.
+-step 1e-4
+-gpu -1
+-verb False

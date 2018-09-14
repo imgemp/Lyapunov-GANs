@@ -226,11 +226,11 @@ class Train(object):
         psi_split = np.split(psi, indices_or_sections=np.cumsum(2*(d_dims+g_dims))[:-1], axis=0)
 
         Ks = range(self.K)
-        self.psi_d = [[self.m.to_gpu(torch.Tensor(psi_split[i][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
-        self.psi_g = [[self.m.to_gpu(torch.Tensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
+        self.psi_d = [[self.m.to_gpu(torch.tensor(psi_split[i][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
+        self.psi_g = [[self.m.to_gpu(torch.tensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
         if self.req_aux:
-            self.psi_d_a = [[self.m.to_gpu(torch.Tensor(psi_split[i+len(d_dims)+len(g_dims)][:,k].reshape(*d_shapes[i])).astype('float32'), requires_grad=False) for i in range(len(d_dims))] for k in Ks]
-            self.psi_g_a = [[self.m.to_gpu(torch.Tensor(psi_split[i+2*len(d_dims)+len(g_dims)][:,k].reshape(*g_shapes[i])).astype('float32'), requires_grad=False) for i in range(len(g_dims))] for k in Ks]
+            self.psi_d_a = [[self.m.to_gpu(torch.tensor(psi_split[i+len(d_dims)+len(g_dims)][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
+            self.psi_g_a = [[self.m.to_gpu(torch.tensor(psi_split[i+2*len(d_dims)+len(g_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
 
         self.lams = np.zeros(self.K)
 
@@ -329,14 +329,18 @@ class Train(object):
                 for k in range(self.K):
                     for i in range(len(self.psi_d[k])):
                         self.psi_d[k][i] /= psi_norms[k]
+                        self.psi_d[k][i].detach()
                     for i in range(len(self.psi_g[k])):
                         self.psi_g[k][i] /= psi_norms[k]
+                        self.psi_g[k][i].detach()
                 if self.req_aux:
                     for k in range(self.K):
                         for i in range(len(self.psi_d_a[k])):
                             self.psi_d_a[k][i] /= psi_norms[k]
+                            self.psi_d_a[k][i].detach()
                         for i in range(len(self.psi_g_a[k])):
                             self.psi_g_a[k][i] /= psi_norms[k]
+                            self.psi_g_a[k][i].detach()
 
                 # 5i. Update Lyapunov exponents (lambdas)
                 new_lam_dts = [np.log(psi_norm.item()) for psi_norm in psi_norms]  # actually equal to lambda*dt

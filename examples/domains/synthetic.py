@@ -17,8 +17,8 @@ class Synthetic(Data):
         super(Synthetic, self).__init__()
 
     def plot_current(self, train, params, i):
-        xx = train.m.get_fake(params['batch_size'], params['z_dim']).data.numpy()
-        yy = train.m.get_real(params['batch_size']).data.numpy()
+        xx = train.m.get_fake(params['batch_size'], params['z_dim']).cpu().data.numpy()
+        yy = train.m.get_real(params['batch_size']).cpu().data.numpy()
 
         fig = plt.figure(figsize=(5,5))
         if xx.shape[1] == 1:
@@ -38,7 +38,7 @@ class Synthetic(Data):
             xy = X.reshape(-1,1)
         else:
             xy = np.hstack((X.reshape(-1,1),Y.reshape(-1,1)))
-        decision = train.m.get_decisions([xy])[0].data.numpy()
+        decision = train.m.get_decisions([xy])[0].cpu().data.numpy()
         CS = plt.contour(X,Y,decision.reshape(X.shape), zorder=0)
         plt.clabel(CS, inline=1, fontsize=10)
 

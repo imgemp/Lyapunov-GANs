@@ -238,7 +238,7 @@ class Train(object):
         self.delta_ts = [step*self.m.params['LE_freq'] for step in steps]
 
         self.real_data_fixed = self.m.get_real(self.m.params['batch_size'])
-        self.fake_data_fixed = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
+        self.fake_z_fixed = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
 
     def train_op(self, it):
         self.m.D.zero_grad()
@@ -257,8 +257,10 @@ class Train(object):
         if it == self.m.params['start_lam_it']:
             # Reinitialize maps with ncreased batch size for reduced stochasticity, i.e., ~deterministic
             self.m.params['batch_size'] *= self.m.params['LE_batch_mult']
-        real_data = self.m.get_real(self.m.params['batch_size'])
-        fake_z = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
+        # real_data = self.m.get_real(self.m.params['batch_size'])
+        # fake_z = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
+        real_data = self.real_data_fixed
+        fake_z = self.fake_z_fixed
 
         # 4. Evaluate Map
         _, _, map_d, map_g, map_aux_d, map_aux_g, V, norm_d, norm_g = self.cmap([real_data, self.m.G(fake_z), self.aux_d, self.aux_g])

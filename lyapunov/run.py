@@ -206,6 +206,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     np.savetxt(params['saveto']+'g_norm.out',np.array(gs))
     np.savetxt(params['saveto']+'loss.out',np.array(fs))
 
+    print('Plotting gradient norms...')
     fig = plt.figure()
     ax = plt.subplot(111)
     plt.plot(range(len(ds)), ds)
@@ -220,15 +221,19 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     ax.set_xlabel('Iteration')
     fig.savefig(params['saveto']+'g_norm.pdf')
 
+    print('Plotting sample series over epochs...')
     if params['n_viz'] > 0:
         data.plot_series(np_samples, params)
 
+    print('Plotting loss...')
     fig = plt.figure()
     ax = plt.subplot(111)
     plt.plot(range(len(fs)),np.array(fs))
     ax.set_ylabel('Loss')
     ax.set_xlabel('Iteration')
     fig.savefig(params['saveto']+'loss.pdf')
+
+    print('Complete.')
 
 
 if __name__ == '__main__':

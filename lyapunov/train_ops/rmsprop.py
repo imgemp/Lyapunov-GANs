@@ -17,8 +17,6 @@ class RMSProp(Map):
 
         # 2. Compute main map
         epsilon = 1e-10
-        # d_map = [g/torch.sqrt(gamma*a+(1-gamma)*g**2.+epsilon) for a, g in zip(aux_d, d_error_grad)]
-        # g_map = [g/torch.sqrt(gamma*a+(1-gamma)*g**2.+epsilon) for a, g in zip(aux_g, g_error_grad)]
         d_map = [g/(torch.sqrt(gamma*a+(1-gamma)*g**2.)+epsilon) for a, g in zip(aux_d, d_error_grad)]
         g_map = [g/(torch.sqrt(gamma*a+(1-gamma)*g**2.)+epsilon) for a, g in zip(aux_g, g_error_grad)]
 

@@ -65,21 +65,21 @@ class GNet(nn.Module):
     def get_param_data(self):
         return [p.data for p in self.parameters()]
 
-    def set_param_data(self,data, req_grad=False):
+    def set_param_data(self, data, req_grad=False):
         for p,d in zip(self.parameters(),data):
             if req_grad:
                 p.data = d
             else:
                 p.data = d.detach()
 
-    def accumulate_gradient(self,grad):
+    def accumulate_gradient(self, grad):
         for p,g in zip(self.parameters(),grad):
             if p.grad is None:
                 p.grad = g.detach()
             else:
                 p.grad += g.detach()
 
-    def multiply_gradient(self,scalar):
+    def multiply_gradient(self, scalar):
         for p in self.parameters():
             if p.grad is not None:
                 p.grad *= scalar
@@ -111,21 +111,21 @@ class DNet(nn.Module):
     def get_param_data(self):
         return [p.data for p in self.parameters()]
 
-    def set_param_data(self,data, req_grad=False):
+    def set_param_data(self, data, req_grad=False):
         for p,d in zip(self.parameters(),data):
             if req_grad:
                 p.data = d
             else:
                 p.data = d.detach()
 
-    def accumulate_gradient(self,grad):
+    def accumulate_gradient(self, grad):
         for p,g in zip(self.parameters(),grad):
             if p.grad is None:
                 p.grad = g.detach()
             else:
                 p.grad += g.detach()
 
-    def multiply_gradient(self,scalar):
+    def multiply_gradient(self, scalar):
         for p in self.parameters():
             if p.grad is not None:
                 p.grad *= scalar
@@ -190,7 +190,7 @@ class Manager(object):
 
 
 class Train(object):
-    def __init__(self,manager):
+    def __init__(self, manager):
         self.m = manager
 
         optimizers = []
@@ -235,7 +235,7 @@ class Train(object):
         self.lams = np.zeros(self.K)
 
         steps = [self.m.params['disc_learning_rate'], self.m.params['gen_learning_rate']] * (1 + self.req_aux)
-        self.delta_ts = [step*self.m.params['gs_freq'] for step in steps]
+        self.delta_ts = [step*self.m.params['LE_freq'] for step in steps]
 
         self.real_data_fixed = self.m.get_real(self.m.params['batch_size'])
         self.fake_data_fixed = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
@@ -254,27 +254,20 @@ class Train(object):
             gaux = [p.data for p in self.aux_g]
 
         # 3. Get real data and samples from p(z) to pass to generator
+        if it == self.m.params['start_lam_it']:
+            # Reinitialize maps with ncreased batch size for reduced stochasticity, i.e., ~deterministic
+            self.m.params['batch_size'] *= self.m.params['LE_batch_mult']
         real_data = self.m.get_real(self.m.params['batch_size'])
         fake_z = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
 
         # 4. Evaluate Map
         _, _, map_d, map_g, map_aux_d, map_aux_g, V, norm_d, norm_g = self.cmap([real_data, self.m.G(fake_z), self.aux_d, self.aux_g])
 
-        # 5. Compute squared norm of transformed maps: NOT CURRENTLY REPORTED
-        # norm_d = sum([torch.sum(g**2.).item() for g in map_d])
-        # norm_g = sum([torch.sum(g**2.).item() for g in map_g])
-
-        # 6. Compute Lyapunov exponents after initial "burn-in"
+        # 5. Compute Lyapunov exponents after initial "burn-in"
         if it >= self.m.params['start_lam_it']:
-            if it == self.m.params['start_lam_it']:
-                # Reinitialize maps with ncreased batch size for reduced stochasticity, i.e., ~deterministic
-                self.m.params['batch_size'] = 2024*4
-                self.maps = [mp(self.m).map for mp in self.m.params['maps']]
-                self.cmap = self.compose(*self.maps)  # [f,g] becomes f(g(x))
-
-            # 6a-e. Loop over psis, perturb, and update: psi = [F(x_k + self.epsilon*psi) - F(x_k)]/self.epsilon
+            # 5a-e. Loop over psis, perturb, and update: psi = [F(x_k + self.epsilon*psi) - F(x_k)]/self.epsilon
             for k in range(self.K):
-                # 6a. Perturb parameters
+                # 5a. Perturb parameters
                 for i,p in enumerate(self.m.D.parameters()):
                     p.data = (p.data + self.epsilon*self.psi_d[k][i]).detach()
                 for i,p in enumerate(self.m.G.parameters()):
@@ -284,9 +277,9 @@ class Train(object):
                         a.data = (a.data + self.epsilon*self.psi_d_a[k][i]).detach()
                     for i,a in enumerate(self.aux_g):
                         a.data = (a.data + self.epsilon*self.psi_g_a[k][i]).detach()
-                # 6b. Evaluate map
+                # 5b. Evaluate map
                 _, _, map_psi_d, map_psi_g, map_psi_aux_d, map_psi_aux_g, _, _, _ = self.cmap([real_data, self.m.G(fake_z), self.aux_d, self.aux_g])
-                # 6c. Update psi[k]
+                # 5c. Update psi[k]
                 for i,psi in enumerate(self.psi_d[k]):
                     psi.sub_(self.m.params['disc_learning_rate']*(map_psi_d[i]-map_d[i])/self.epsilon)
                 for i,psi in enumerate(self.psi_g[k]):
@@ -296,19 +289,19 @@ class Train(object):
                         psi.sub_(self.m.params['disc_learning_rate']*(map_psi_aux_d[i]-map_aux_d[i])/self.epsilon)
                     for i,psi in enumerate(self.psi_g_a[k]):
                         psi.sub_(self.m.params['gen_learning_rate']*(map_psi_aux_g[i]-map_aux_g[i])/self.epsilon)
-                # 6d. Reset weights to x_k
+                # 5d. Reset weights to x_k
                 self.m.D.set_param_data(Dp)
                 self.m.G.set_param_data(Gp)
-                # 6e. Reset auxiliary vars to aux_k
+                # 5e. Reset auxiliary vars to aux_k
                 if self.req_aux:
                     for i,a in enumerate(self.aux_d):
                         a.data = daux[i].detach()
                     for i,a in enumerate(self.aux_g):
                         a.data = gaux[i].detach()
 
-            # 6f-i. Orthogonalize psis, compute norms, normalize psis, and update Lyapunov exponents
-            if (it+1 - self.m.params['start_lam_it']) % self.m.params['gs_freq'] == 0:
-                # 6f. Compute norms of columns of Psi
+            # 5f-i. Orthogonalize psis, compute norms, normalize psis, and update Lyapunov exponents
+            if (it+1 - self.m.params['start_lam_it']) % self.m.params['LE_freq'] == 0:
+                # 5f. Compute norms of columns of Psi
                 psi_d_norms_squared = [sum([torch.sum(psi**2) for psi in psi_k]) for psi_k in self.psi_d]
                 psi_g_norms_squared = [sum([torch.sum(psi**2) for psi in psi_k]) for psi_k in self.psi_g]
                 norms = [psi_d_norms_squared, psi_g_norms_squared]
@@ -322,7 +315,7 @@ class Train(object):
                 psis_sh = [functools.reduce(lambda x,y: x+y, ps) for ps in zip(*psis)]  # psis is 4 parameter dims x K x num weights
                 # this turns it into K x total num weights
 
-                # 6g. Gram Schmidt
+                # 5g. Gram Schmidt
                 psis_temp = list(zip(*self.GramSchmidt(psis_sh, psi_norms)))
                 self.psi_d = [list(el) for el in zip(*psis_temp[:self.num_d])]
                 self.psi_g = [list(el) for el in zip(*psis_temp[self.num_d:self.num_d+self.num_g])]
@@ -330,7 +323,7 @@ class Train(object):
                     self.psi_d_a = [list(el) for el in zip(*psis_temp[self.num_d+self.num_g:2*self.num_d+self.num_g])]
                     self.psi_g_a = [list(el) for el in zip(*psis_temp[2*self.num_d+self.num_g:])]
 
-                # 6h. Normalize psis
+                # 5h. Normalize psis
                 for k in range(self.K):
                     for i in range(len(self.psi_d[k])):
                         self.psi_d[k][i] /= psi_norms[k]
@@ -343,21 +336,21 @@ class Train(object):
                         for i in range(len(self.psi_g_a[k])):
                             self.psi_g_a[k][i] /= psi_norms[k]
 
-                # 6i. Update Lyapunov exponents (lambdas)
+                # 5i. Update Lyapunov exponents (lambdas)
                 new_lam_dts = [np.log(psi_norm.item()) for psi_norm in psi_norms]  # actually equal to lambda*dt
                 Ts = [dt*(it - self.m.params['start_lam_it']) for dt in self.delta_ts]
                 self.lams = np.array([(lam*T+new_lam_dt)/(T+dt) for lam, new_lam_dt, T, dt in zip(self.lams, new_lam_dts, Ts, self.delta_ts)])
 
-        # 7. Accumulate F(x_k)
+        # 6. Accumulate F(x_k)
         self.m.D.accumulate_gradient(map_d) # compute/store map, but don't change params
         self.m.G.accumulate_gradient(map_g)
 
-        # 8. Update network parameters
+        # 7. Update network parameters
         self.d_optimizer.step()  # Optimizes D's parameters; changes based on stored map from backward()
         self.g_optimizer.step()  # Optimizes G's parameters
 
         if self.req_aux:
-            # 9. Update auxiliary parameters
+            # 8. Update auxiliary parameters
             for i,a in enumerate(self.aux_d):
                 a.sub_(self.m.params['disc_learning_rate']*map_aux_d[i])  # in place add: a = a + lr*map
             for i,a in enumerate(self.aux_g):
@@ -393,7 +386,7 @@ class Train(object):
 
 class Map(object):
     req_aux = False
-    def __init__(self,manager):
+    def __init__(self, manager):
         self.m = manager
 
     def map(self, F=None):

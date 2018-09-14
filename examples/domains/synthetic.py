@@ -43,9 +43,6 @@ class Synthetic(Data):
         plt.clabel(CS, inline=1, fontsize=10)
 
         plt.axis('off')
-        #if generate_movie:
-        #    frames.append(mplfig_to_npimage(fig))
-        #show()
         fig.savefig(params['saveto']+'fig'+str(i)+'.pdf') 
         plt.close(fig)
 

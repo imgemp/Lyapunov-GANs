@@ -25,17 +25,14 @@ def parse_params():
     parser = argparse.ArgumentParser(description='GANs in PyTorch')
     parser.add_argument('-dom','--domain', type=str, default='MO8G', help='domain to run', required=False)
     parser.add_argument('-desc','--description', type=str, default='', help='description for the experiment', required=False)
-    parser.add_argument('-alg','--algorithm', type=str, default='simgd', help='algorithm to use for training: simgd, cc, con, reg, reg_alt', required=False)
     parser.add_argument('-bs','--batch_size', type=int, default=512, help='batch_size for training', required=False)
     parser.add_argument('-div','--divergence', type=str, default='JS', help='divergence measure, i.e. V, for training', required=False)
-    parser.add_argument('-d_opt','--disc_optim', type=str, default='Adam', help='discriminator training algorithm', required=False)
     parser.add_argument('-d_lr','--disc_learning_rate', type=float, default=1e-4, help='discriminator learning rate', required=False)
     parser.add_argument('-d_l2','--disc_weight_decay', type=float, default=0., help='discriminator weight decay', required=False)
     parser.add_argument('-d_nh','--disc_n_hidden', type=int, default=128, help='# of hidden units for discriminator', required=False)
     parser.add_argument('-d_nl','--disc_n_layer', type=int, default=1, help='# of hidden layers for discriminator', required=False)
     parser.add_argument('-d_nonlin','--disc_nonlinearity', type=str, default='relu', help='type of nonlinearity for discriminator', required=False)
     parser.add_argument('-d_quad','--disc_quadratic_layer', type=lambda x: (str(x).lower() == 'true'), default=False, help='whether to use a quadratic final layer', required=False)
-    parser.add_argument('-g_opt','--gen_optim', type=str, default='Adam', help='generator training algorithm', required=False)
     parser.add_argument('-g_lr','--gen_learning_rate', type=float, default=1e-4, help='generator learning rate', required=False)
     parser.add_argument('-g_l2','--gen_weight_decay', type=float, default=0., help='generator weight decay', required=False)
     parser.add_argument('-g_nh','--gen_n_hidden', type=int, default=128, help='# of hidden units for generator', required=False)
@@ -53,11 +50,21 @@ def parse_params():
     parser.add_argument('-gam','--gamma', type=float, default=10., help='gamma parameter for consensus, reg, reg_alt, and cc', required=False)
     parser.add_argument('-gamT','--gammaT', type=float, default=-1e11, help='gamma parameter for JTF in cc algorithm', required=False)
     parser.add_argument('-kap','--kappa', type=float, default=0., help='kappa parameter for F in cc algorithm', required=False)
-    parser.add_argument('-step','--step', type=float, default=1e-3, help='step used to compute F(x_k+1) for cc', required=False)
     parser.add_argument('-saveto','--saveto', type=str, default='', help='path prefix for saving results', required=False)
     parser.add_argument('-gpu','--gpu', type=int, default=-2, help='if/which gpu to use (-1: all, -2: None)', required=False)
     parser.add_argument('-verb','--verbose', type=lambda x: (str(x).lower() == 'true'), default=False, help='whether to print progress to stdout', required=False)
+    parser.add_argument('-maps','--map_strings', type=str, nargs='+', default=[''], help='string names of optimizers to use for generator and discriminator', required=False)
+    parser.add_argument('-K','--K', type=int, default=2, help='number of lyapunov exponents to compute', required=False)
+    parser.add_argument('-psi_epsilon','--psi_epsilon', type=float, default=0., help='epsilon to use for finite difference approximation of Jacobian vector product', required=False)
+    parser.add_argument('-LE_freq','--LE_freq', type=int, default=5, help='number of steps to wait inbetween computing LEs', required=False)
+    parser.add_argument('-LE_batch_mult','--LE_batch_mult', type=int, default=10, help='batch_size multiplier to reduce variance when computing LEs', required=False)
+    parser.add_argument('-start_lam_it','--start_lam_it', type=int, default=-1, help='number of steps to wait inbetween computing LEs', required=False)
     args = vars(parser.parse_args())
+
+    if args['psi_epsilon'] <= 0.:
+        args['psi_epsilon'] = 0.1*min(args['disc_learning_rate'],args['gen_learning_rate'])
+    if args['start_lam_it'] < 0.:
+        args['start_lam_it'] = int(0.9*args['max_iter'])
 
     if args['domain'] == 'MO8G':
         from examples.domains.synthetic import MOG_Circle as Domain
@@ -88,37 +95,36 @@ def parse_params():
     else:
         raise NotImplementedError(args['domain'])
 
-    if args['algorithm'] == 'simgd':
-        from lyapunov.train_ops.train_simgd import SimGD as Train
-    elif args['algorithm'] == 'cc':
-        from lyapunov.train_ops.train_cc import CrossCurl as Train
-        if args['gammaT'] < -1e10:
-            args['gammaT'] == args['gamma']
-    elif args['algorithm'] == 'consensus':
-        # from lyapunov.train_ops.consensus import Consensus as Train
-        from lyapunov.core import Train
-    elif args['algorithm'] == 'reg':
-        from lyapunov.train_ops.train_reg import Regularized as Train
-    elif args['algorithm'] == 'reg_alt':
-        from lyapunov.train_ops.train_reg_alt import Regularized_Alt as Train
-    else:
-        raise NotImplementedError(args['alg'])
+    from lyapunov.core import Train
+    args['maps'] = []
+    for mp in args['map_strings']:
+        if mp.lower() == 'consensus':
+            from lyapunov.train_ops.consensus import Consensus
+            args['maps'] += [Consensus]
+        elif mp.lower() == 'rmsprop':
+            from lyapunov.train_ops.rmsprop import RMSProp
+            args['maps'] += [RMSProp]
+        else:
+            raise NotImplementedError(mp)
+    from lyapunov.train_ops.simgd import SimGD
+    args['maps'] += [SimGD]
 
     if args['saveto'] == '':
-        args['saveto'] = 'examples/results/' + args['domain'] + '/' + args['algorithm'] + '/' + args['description']
+        args['saveto'] = 'examples/results/' + args['domain'] + '/' + '-'.join(args['map_strings']) + '/' + args['description']
 
     if args['description'] == '':
-        args['description'] = args['domain'] + '-' + args['algorithm']
+        args['description'] = args['domain'] + '-' + '-'.join(args['map_strings'])
     elif args['description'].isdigit():
-        args['description'] = args['domain'] + '-' + args['algorithm'] + '-' + args['description']
+        args['description'] = args['domain'] + '-' + '-'.join(args['map_strings']) + '-' + args['description']
 
     saveto = args['saveto'] + '/' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S/{}').format('')
     if not os.path.exists(saveto):
         os.makedirs(saveto)
     shutil.copy(os.path.realpath('lyapunov/run.py'), os.path.join(saveto, 'run.py'))
     shutil.copy(os.path.realpath('lyapunov/core.py'), os.path.join(saveto, 'core.py'))
-    train_file = args['algorithm']+'.py'
-    shutil.copy(os.path.realpath('lyapunov/train_ops/'+train_file), os.path.join(saveto, train_file))
+    for mp in args['map_strings']:
+        train_file = mp+'.py'
+        shutil.copy(os.path.realpath('lyapunov/train_ops/'+train_file), os.path.join(saveto, train_file))
     with open(saveto+'args.txt', 'w') as file:
         for key, val in args.items():
             file.write('--'+str(key)+' '+str(val)+'\n')
@@ -131,22 +137,8 @@ def parse_params():
     else:
         args['description'] += ' (cpu)'
 
-    from lyapunov.train_ops.consensus import Consensus
-    from lyapunov.train_ops.rmsprop import RMSProp
-    from lyapunov.train_ops.simgd import SimGD
-    # args['maps'] = [Consensus, RMSProp, SimGD]
-    args['maps'] = [RMSProp, Consensus, SimGD]
-    # args['maps'] = [Consensus, SimGD]
-    # args['maps'] = [RMSProp, SimGD]
-    # args['maps'] = [SimGD]
-    args['K'] = 2
-    args['psi_epsilon'] = 1e-4
-    args['gs_freq'] = 1
-    args['start_lam_it'] = 4500
-
-    # python lyapunov/run.py $(cat examples/args/MO8G/con/exp-con-25.txt) -alg consensus -verb True -bs 512 -d_lr 1e-3 -g_lr 1e-3 -gam 1 -d_nonlin leaky_relu -g_nonlin leaky_relu -mx_it 5001 -dom CLGaussian -xdim 1 -zdim 1 -mx_it 10000 -d_lr 1e-6 -g_lr 1e-6
-    # python lyapunov/run.py $(cat examples/args/MO8G/con/exp-con-25.txt) -alg consensus -verb True -bs 512 -d_lr 1e-3 -g_lr 1e-3 -gam 1 -d_nonlin leaky_relu -g_nonlin leaky_relu -mx_it 5001
-
+    # python lyapunov/run.py $(cat examples/args/MO8G/con/00.txt) -dom CLGaussian -xdim 1 -zdim 1 -mx_it 10000 -d_lr 1e-6 -g_lr 1e-6
+    
     return Train, Domain, Generator, Discriminator, args
 
 
@@ -172,6 +164,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     np_samples = []
     ds = [] # first gradients 
     gs = []
+    ls = []
     viz_every = params['viz_every']
 
     iterations = range(params['max_iter'])
@@ -188,11 +181,18 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         fs.append(f)
         ds.append(d)
         gs.append(g)
+        if i >= params['start_lam_it']:
+            ls.append(lams)
 
         if viz_every > 0 and i % viz_every == 0:
             if params['n_viz'] > 0:
                 np_samples.append(train.m.get_fake(params['n_viz'], params['z_dim']).cpu().data.numpy())
             data.plot_current(train, params, i)
+            if i >= params['start_lam_it']:
+                fig = plt.figure()
+                plt.plot(np.vstack(ls))
+                fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
+                plt.close(fig)
 
         if params['series_every'] > 0 and params['n_viz'] > 0 and i % params['series_every'] == 0:
             data.plot_series(np_samples, params)

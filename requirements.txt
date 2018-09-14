@@ -3,6 +3,5 @@ ipython>=5.3.0
 numpy>=1.6.1
 scipy>=0.19.0
 scikit-learn>=0.18.1
-pip install http://download.pytorch.org/whl/cu90/torch-0.3.0.post4-cp36-cp36m-linux_x86_64.whl
-pip install sklearn tqdm matplotlib seaborn IPython
-pip install numpy scipy sklearn ipython matplotlib seaborn tqdm
+pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
+pip install tqdm seaborn

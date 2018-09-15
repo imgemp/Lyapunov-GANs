@@ -13,24 +13,6 @@ from utils import detach_all
 
 from IPython import embed
 
-# https://github.com/locuslab/gradient_regularized_gan/blob/master/gaussian-toy-regularized.py
-# https://github.com/devnag/pytorch-generative-adversarial-networks/blob/master/gan_pytorch.py
-# https://github.com/GKalliatakis/Delving-deep-into-GANs
-# https://github.com/wiseodd/generative-models/blob/master/VAE/vanilla_vae/vae_pytorch.py
-# https://github.com/martinarjovsky/WassersteinGAN/blob/master/main.py
-# https://github.com/caogang/wgan-gp/blob/master/gan_mnist.py
-# https://github.com/caogang/wgan-gp
-# http://deeplearning.net/software/theano/tutorial/conv_arithmetic.html
-# https://github.com/LMescheder/TheNumericsOfGANs
-# http://www.inference.vc/my-notes-on-the-numerics-of-gans/
-# https://github.com/poolio/unrolled_gan/blob/master/Unrolled%20GAN%20demo.ipynb
-# https://github.com/locuslab/gradient_regularized_gan/blob/master/gaussian-toy-regularized.py
-# https://wiseodd.github.io/techblog/2017/02/04/wasserstein-gan/
-
-# https://github.com/pytorch/pytorch/releases/tag/v0.4.0
-# http://pytorch.org/2018/04/22/0_4_0-migration-guide.html
-# https://github.com/pytorch/pytorch/commit/bc7a41af7d541e64f8b8f7318a7a2248c0119632
-
  
 class Data(object):
     '''

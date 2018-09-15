@@ -63,6 +63,7 @@ def parse_params():
     parser.add_argument('-LE_freq','--LE_freq', type=int, default=5, help='number of steps to wait inbetween computing LEs', required=False)
     parser.add_argument('-LE_batch_mult','--LE_batch_mult', type=int, default=10, help='batch_size multiplier to reduce variance when computing LEs', required=False)
     parser.add_argument('-start_lam_it','--start_lam_it', type=int, default=-1, help='number of steps to wait inbetween computing LEs', required=False)
+    parser.add_argument('-det','--deterministic', type=lambda x: (str(x).lower() == 'true'), default=False, help='whether to compute loss always using same samples', required=False)
     args = vars(parser.parse_args())
 
     if args['psi_epsilon'] <= 0.:
@@ -191,7 +192,6 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
 
         if viz_every > 0 and i % viz_every == 0:
             if params['n_viz'] > 0:
-                # np_samples.append(train.m.get_fake(params['n_viz'], params['z_dim']).cpu().data.numpy())
                 np.save(params['saveto']+'samples/'+str(i), train.m.get_fake(params['n_viz'], params['z_dim']).cpu().data.numpy())
             data.plot_current(train, params, i)
             if i >= params['start_lam_it']:
@@ -199,9 +199,6 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
                 plt.plot(np.vstack(ls))
                 fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
                 plt.close(fig)
-
-        # if params['series_every'] > 0 and params['n_viz'] > 0 and i % params['series_every'] == 0:
-        #     data.plot_series(np_samples, params)
 
         if params['weights_every'] > 0 and i % params['weights_every'] == 0:
             save_weights(m.D,params['saveto']+'D_'+str(i)+'.pkl')

@@ -24,7 +24,4 @@ class SimGD(Map):
         norm_d = sum([torch.sum(g**2.) for g in d_error_grad])
         norm_g = sum([torch.sum(g**2.) for g in g_error_grad])
 
-        # d_error_grad = [g.detach() for g in d_error_grad]
-        # g_error_grad = [g.detach() for g in g_error_grad]
-
         return [aux_d, aux_g, d_error_grad, g_error_grad, None, None, Vsum, norm_d, norm_g]

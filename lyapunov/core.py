@@ -9,8 +9,10 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torch.distributions import Uniform
 
+from utils import detach_all
+
 from IPython import embed
-import gc
+
 # https://github.com/locuslab/gradient_regularized_gan/blob/master/gaussian-toy-regularized.py
 # https://github.com/devnag/pytorch-generative-adversarial-networks/blob/master/gan_pytorch.py
 # https://github.com/GKalliatakis/Delving-deep-into-GANs
@@ -255,21 +257,20 @@ class Train(object):
 
         # 3. Get real data and samples from p(z) to pass to generator
         if it == self.m.params['start_lam_it']:
-            # Reinitialize maps with ncreased batch size for reduced stochasticity, i.e., ~deterministic
+            # Increase batch size for reduced stochasticity, i.e., ~deterministic
             self.m.params['batch_size'] *= self.m.params['LE_batch_mult']
-        # real_data = self.m.get_real(self.m.params['batch_size'])
-        # fake_z = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
-        real_data = self.real_data_fixed
-        fake_z = self.fake_z_fixed
+            if self.params['deterministic']:
+                self.real_data_fixed = self.m.get_real(self.m.params['batch_size'])
+                self.fake_z_fixed = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
+        if self.m.params['deterministic']:
+            real_data = self.real_data_fixed
+            fake_z = self.fake_z_fixed
+        else:
+            real_data = self.m.get_real(self.m.params['batch_size'])
+            fake_z = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
 
         # 4. Evaluate Map
         _, _, map_d, map_g, map_aux_d, map_aux_g, V, norm_d, norm_g = detach_all(self.cmap([real_data, self.m.G(fake_z), self.aux_d, self.aux_g]))
-
-        # mps = map_d + map_g + [norm_d] + [norm_g]
-        # if self.req_aux:
-        #     mps += map_aux_d + map_aux_g
-        # for mp in mps:
-        #     mp.detach()
 
         # 5. Compute Lyapunov exponents after initial "burn-in"
         if it >= self.m.params['start_lam_it']:
@@ -287,11 +288,6 @@ class Train(object):
                         a.data = (a.data + self.epsilon*self.psi_g_a[k][i]).detach()
                 # 5b. Evaluate map
                 _, _, map_psi_d, map_psi_g, map_psi_aux_d, map_psi_aux_g, _, _, _ = detach_all(self.cmap([real_data, self.m.G(fake_z), self.aux_d, self.aux_g]))
-                # mps = map_psi_d + map_psi_g
-                # if self.req_aux:
-                #     mps += map_psi_aux_d + map_psi_aux_g
-                # for mp in mps:
-                #     mp.detach()
 
                 # 5c. Update psi[k]
                 for i,psi in enumerate(self.psi_d[k]):
@@ -374,18 +370,6 @@ class Train(object):
             for i,a in enumerate(self.aux_g):
                 a.sub_(self.m.params['gen_learning_rate']*map_aux_g[i])  # in place add: a = a + lr*map
 
-        # num_objs = 0
-        # total_mem = 0
-        # for obj in gc.get_objects():
-        #     try:
-        #         if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
-        #             num_objs += 1
-        #             total_mem += np.prod(obj.size()) if len(obj.size()) > 0 else 0
-        #             # print(functools.reduce(op.mul, obj.size()) if len(obj.size()) > 0 else 0, type(obj), obj.size())
-        #     except:
-        #         pass
-        # print(num_objs, total_mem)
-
         return self.lams, norm_d.item(), norm_g.item(), V.item()
 
     @staticmethod
@@ -412,16 +396,6 @@ class Train(object):
         https://mathieularose.com/function-composition-in-python/
         '''
         return functools.reduce(lambda f, g: lambda x: f(g(*x)), functions, lambda x: x)
-
-
-def detach_all(a):
-    detached = []
-    for ai in a:
-        if isinstance(ai, list):
-            detached += [detach_all(ai)]
-        else:
-            detached += [ai.detach()]
-    return detached
         
 
 class Map(object):

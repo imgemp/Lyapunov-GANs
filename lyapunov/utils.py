@@ -29,3 +29,12 @@ def load_weights(module,file):
     for p,w in zip(module.parameters(),weights):
         p.data = torch.from_numpy(w)
     return weights
+
+def detach_all(a):
+    detached = []
+    for ai in a:
+        if isinstance(ai, list):
+            detached += [detach_all(ai)]
+        else:
+            detached += [ai.detach()]
+    return detached

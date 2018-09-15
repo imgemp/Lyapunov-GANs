@@ -241,7 +241,7 @@ class Train(object):
         if it == self.m.params['start_lam_it']:
             # Increase batch size for reduced stochasticity, i.e., ~deterministic
             self.m.params['batch_size'] *= self.m.params['LE_batch_mult']
-            if self.params['deterministic']:
+            if self.m.params['deterministic']:
                 self.real_data_fixed = self.m.get_real(self.m.params['batch_size'])
                 self.fake_z_fixed = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
         if self.m.params['deterministic']:

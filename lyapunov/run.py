@@ -1,16 +1,21 @@
 import os
+import psutil
 import shutil
 import argparse
 import datetime
 import resource
+import pickle
 import numpy as np
-import gc
 import torch
 import time
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.collections as mcoll
+import matplotlib.path as mpath
 import seaborn as sns
+
+from sklearn.decomposition import IncrementalPCA
 
 import sys
 sys.path.append('../')
@@ -19,11 +24,11 @@ from lyapunov.core import Manager
 from lyapunov.utils import gpu_helper, save_weights, load_weights
 
 from tqdm import tqdm
-import os
-import psutil
-process = psutil.Process(os.getpid())
 
 from IPython import embed
+
+
+process = psutil.Process(os.getpid())
 
 def parse_params():
     parser = argparse.ArgumentParser(description='GANs in PyTorch')
@@ -126,6 +131,7 @@ def parse_params():
     if not os.path.exists(saveto):
         os.makedirs(saveto)
         os.makedirs(saveto+'/samples')
+        os.makedirs(saveto+'/weights')
     shutil.copy(os.path.realpath('lyapunov/run.py'), os.path.join(saveto, 'run.py'))
     shutil.copy(os.path.realpath('lyapunov/core.py'), os.path.join(saveto, 'core.py'))
     for mp in args['map_strings']:
@@ -187,8 +193,20 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         fs.append(f)
         ds.append(d)
         gs.append(g)
+
         if i >= params['start_lam_it']:
             ls.append(lams)
+            save_weights(m.D,params['saveto']+'weights/D_'+str(i)+'.pkl')
+            save_weights(m.G,params['saveto']+'weights/G_'+str(i)+'.pkl')
+            if train.req_aux:
+                aux_d = []
+                for a in train.aux_d:
+                    aux_d += [a.cpu().data.numpy()]
+                aux_g = []
+                for a in train.aux_g:
+                    aux_g += [a.cpu().data.numpy()]
+                pickle.dump(aux_d,open(params['saveto']+'weights/D_aux_'+str(i)+'.pkl','wb'))
+                pickle.dump(aux_g,open(params['saveto']+'weights/G_aux_'+str(i)+'.pkl','wb'))
 
         if viz_every > 0 and i % viz_every == 0:
             if params['n_viz'] > 0:
@@ -232,6 +250,31 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     ax.set_xlabel('Iteration')
     fig.savefig(params['saveto']+'loss.pdf')
 
+    print('Plotting PCA of trajectory...')
+    weights = []
+    for w_i in range(params['start_lam_it'],params['max_iter']):
+        w_D = flatten_nested(pickle.load(open(params['saveto']+'weights/D_'+str(w_i)+'.pkl','rb')))
+        w_G = flatten_nested(pickle.load(open(params['saveto']+'weights/G_'+str(w_i)+'.pkl','rb')))
+        weights.append(np.hstack([w_D,w_G]))
+    weights = np.vstack(weights)
+    ipca = IncrementalPCA(n_components=2, batch_size=10)
+    X_ipca = ipca.fit_transform(weights)
+    fig, ax = plt.subplots()
+    path = mpath.Path(X_ipca)
+    verts = path.interpolated(steps=3).vertices
+    x, y = verts[:, 0], verts[:, 1]
+    z = np.linspace(0, 1, len(x))
+    colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=2)
+    fig.savefig(params['saveto']+'weights_pca.pdf') 
+    plt.close(fig)
+
+    print('Plotting norm of weights over trajectory...')
+    w_norms = np.linalg.norm(weights, axis=1)
+    fig = plt.figure()
+    plt.plot(w_norms)
+    fig.savefig(params['saveto']+'weight_norms.pdf') 
+    plt.close(fig)
+
     print('Plotting sample series over epochs...')
     if params['n_viz'] > 0:
         np_samples = []
@@ -240,6 +283,56 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         data.plot_series(np_samples, params)
 
     print('Complete.')
+
+
+def flatten_nested(a):
+    return np.concatenate([ai.flatten() for ai in a])
+
+
+def colorline(
+    x, y, z=None, cmap=plt.get_cmap('copper'), norm=plt.Normalize(0.0, 1.0),
+        linewidth=3, alpha=1.0):
+    """
+    http://nbviewer.ipython.org/github/dpsanders/matplotlib-examples/blob/master/colorline.ipynb
+    http://matplotlib.org/examples/pylab_examples/multicolored_line.html
+    Plot a colored line with coordinates x and y
+    Optionally specify colors in the array z
+    Optionally specify a colormap, a norm function and a line width
+    """
+
+    # Default colors equally spaced on [0,1]:
+    if z is None:
+        z = np.linspace(0.0, 1.0, len(x))
+
+    # Special case if a single number:
+    if not hasattr(z, "__iter__"):  # to check for numerical input -- this is a hack
+        z = np.array([z])
+
+    z = np.asarray(z)
+
+    segments = make_segments(x, y)
+    lc = mcoll.LineCollection(segments, array=z, cmap=cmap, norm=norm,
+                              linewidth=linewidth, alpha=alpha)
+
+    ax = plt.gca()
+    ax.add_collection(lc)
+
+    ax.set_xlim([x.min(),x.max()])
+    ax.set_ylim([y.min(),y.max()])
+
+    return lc
+
+
+def make_segments(x, y):
+    """
+    Create list of line segments from x and y coordinates, in the correct format
+    for LineCollection: an array of the form numlines x (points per line) x 2 (x
+    and y) array
+    """
+
+    points = np.array([x, y]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    return segments
 
 
 if __name__ == '__main__':

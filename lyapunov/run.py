@@ -224,13 +224,6 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     ax.set_xlabel('Iteration')
     fig.savefig(params['saveto']+'g_norm.pdf')
 
-    print('Plotting sample series over epochs...')
-    if params['n_viz'] > 0:
-        np_samples = []
-        for viz_i in range(0,params['max_iter'],viz_every):
-            np_samples.append(np.load(params['saveto']+'samples/'+str(viz_i)+'.npy'))
-        data.plot_series(np_samples, params)
-
     print('Plotting loss...')
     fig = plt.figure()
     ax = plt.subplot(111)
@@ -238,6 +231,13 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     ax.set_ylabel('Loss')
     ax.set_xlabel('Iteration')
     fig.savefig(params['saveto']+'loss.pdf')
+
+    print('Plotting sample series over epochs...')
+    if params['n_viz'] > 0:
+        np_samples = []
+        for viz_i in range(0,params['max_iter'],viz_every):
+            np_samples.append(np.load(params['saveto']+'samples/'+str(viz_i)+'.npy'))
+        data.plot_series(np_samples, params)
 
     print('Complete.')
 

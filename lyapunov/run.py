@@ -234,6 +234,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     plt.plot(range(len(ds)), ds)
     ax.set_ylabel('Discriminator Gradient L2 Norm')
     ax.set_xlabel('Iteration')
+    plt.title('final loss='+str(ds[-1]))
     fig.savefig(params['saveto']+'d_norm.pdf')
 
     fig = plt.figure()
@@ -241,6 +242,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     plt.plot(range(len(gs)), gs)
     ax.set_ylabel('Generator Gradient L2 Norm')
     ax.set_xlabel('Iteration')
+    plt.title('final loss='+str(gs[-1]))
     fig.savefig(params['saveto']+'g_norm.pdf')
 
     print('Plotting loss...')
@@ -249,6 +251,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     plt.plot(range(len(fs)),np.array(fs))
     ax.set_ylabel('Loss')
     ax.set_xlabel('Iteration')
+    plt.title('final loss='+str(fs[-1]))
     fig.savefig(params['saveto']+'loss.pdf')
 
     print('Plotting PCA of trajectory...')
@@ -266,6 +269,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
     colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=2)
+    plt.title('p2px='+str(np.ptp(x))+', p2py='+str(np.ptp(y)))
     fig.savefig(params['saveto']+'weights_pca.pdf')
     plt.close(fig)
 
@@ -273,6 +277,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     w_norms = np.linalg.norm(weights, axis=1)
     fig = plt.figure()
     plt.plot(w_norms)
+    plt.title('p2p='+str(np.ptp(w_norms)))
     fig.savefig(params['saveto']+'weight_norms.pdf')
     plt.close(fig)
 
@@ -280,6 +285,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     w_mean_norms = np.linalg.norm(weights-weights.mean(axis=0), axis=1)
     fig = plt.figure()
     plt.plot(w_mean_norms)
+    plt.title('p2p='+str(np.ptp(w_mean_norms)))
     fig.savefig(params['saveto']+'weight_mean_norms.pdf')
     plt.close(fig)
 
@@ -289,6 +295,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     w_closest_norms = np.linalg.norm(weights-closest, axis=1)
     fig = plt.figure()
     plt.plot(w_closest_norms)
+    plt.title('p2p='+str(np.ptp(w_closest_norms)))
     fig.savefig(params['saveto']+'weight_closest_norms.pdf')
     plt.close(fig)
 

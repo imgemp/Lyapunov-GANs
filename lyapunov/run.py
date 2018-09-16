@@ -254,13 +254,15 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     plt.title('final loss='+str(fs[-1]))
     fig.savefig(params['saveto']+'loss.pdf')
 
-    print('Plotting PCA of trajectory...')
+    print('Loading weights from saved files...')
     weights = []
     for w_i in range(params['start_lam_it'],params['max_iter']):
         w_D = flatten_nested(pickle.load(open(params['saveto']+'weights/D_'+str(w_i)+'.pkl','rb')))
         w_G = flatten_nested(pickle.load(open(params['saveto']+'weights/G_'+str(w_i)+'.pkl','rb')))
         weights.append(np.hstack([w_D,w_G]))
     weights = np.vstack(weights)
+
+    print('Plotting PCA of trajectory...')
     ipca = IncrementalPCA(n_components=2, batch_size=10)
     X_ipca = ipca.fit_transform(weights)
     fig, ax = plt.subplots()
@@ -271,6 +273,20 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=2)
     plt.title('p2px='+str(np.ptp(x))+', p2py='+str(np.ptp(y)))
     fig.savefig(params['saveto']+'weights_pca.pdf')
+    plt.close(fig)
+
+    print('Plotting PCA of normalized trajectory...')
+    ipca2 = IncrementalPCA(n_components=2, batch_size=10)
+    weights_normalized = (weights - weights.min(axis=0))/np.ptp(weights, axis=0)
+    X_ipca2 = ipca2.fit_transform(weights_normalized)
+    fig, ax = plt.subplots()
+    path2 = mpath.Path(X_ipca2)
+    verts2 = path.interpolated(steps=3).vertices
+    x2, y2 = verts2[:, 0], verts2[:, 1]
+    z2 = np.linspace(0, 1, len(x2))
+    colorline(x2, y2, z2, cmap=plt.get_cmap('Greys'), linewidth=2)
+    plt.title('p2px='+str(np.ptp(x2))+', p2py='+str(np.ptp(y2)))
+    fig.savefig(params['saveto']+'weights_pca2.pdf')
     plt.close(fig)
 
     print('Plotting norm of weights over trajectory...')

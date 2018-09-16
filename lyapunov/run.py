@@ -16,6 +16,7 @@ import matplotlib.path as mpath
 import seaborn as sns
 
 from sklearn.decomposition import IncrementalPCA
+from sklearn.metrics.pairwise import pairwise_distances
 
 import sys
 sys.path.append('../')
@@ -265,14 +266,30 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
     colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=2)
-    fig.savefig(params['saveto']+'weights_pca.pdf') 
+    fig.savefig(params['saveto']+'weights_pca.pdf')
     plt.close(fig)
 
     print('Plotting norm of weights over trajectory...')
     w_norms = np.linalg.norm(weights, axis=1)
     fig = plt.figure()
     plt.plot(w_norms)
-    fig.savefig(params['saveto']+'weight_norms.pdf') 
+    fig.savefig(params['saveto']+'weight_norms.pdf')
+    plt.close(fig)
+
+    print('Plotting distance of weights from mean over trajectory...')
+    w_mean_norms = np.linalg.norm(weights-weights.mean(axis=0), axis=1)
+    fig = plt.figure()
+    plt.plot(w_mean_norms)
+    fig.savefig(params['saveto']+'weight_mean_norms.pdf')
+    plt.close(fig)
+
+    print('Plotting distance of weights from closest vector over trajectory...')
+    D = pairwise_distances(weights)
+    closest = weights[D.sum(axis=1).argmin()]
+    w_closest_norms = np.linalg.norm(weights-closest, axis=1)
+    fig = plt.figure()
+    plt.plot(w_closest_norms)
+    fig.savefig(params['saveto']+'weight_closest_norms.pdf')
     plt.close(fig)
 
     print('Plotting sample series over epochs...')

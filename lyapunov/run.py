@@ -267,10 +267,10 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     X_ipca = ipca.fit_transform(weights)
     fig, ax = plt.subplots()
     path = mpath.Path(X_ipca)
-    verts = path.interpolated(steps=3).vertices
+    verts = path.interpolated(steps=1).vertices
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
-    colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=2)
+    colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
     plt.title('p2px='+str(np.ptp(x))+', p2py='+str(np.ptp(y)))
     fig.savefig(params['saveto']+'weights_pca.pdf')
     plt.close(fig)
@@ -281,10 +281,10 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     X_ipca2 = ipca2.fit_transform(weights_normalized)
     fig, ax = plt.subplots()
     path2 = mpath.Path(X_ipca2)
-    verts2 = path2.interpolated(steps=3).vertices
+    verts2 = path2.interpolated(steps=1).vertices
     x2, y2 = verts2[:, 0], verts2[:, 1]
     z2 = np.linspace(0, 1, len(x2))
-    colorline(x2, y2, z2, cmap=plt.get_cmap('Greys'), linewidth=2)
+    colorline(x2, y2, z2, cmap=plt.get_cmap('Greys'), linewidth=0.2)
     plt.title('p2px='+str(np.ptp(x2))+', p2py='+str(np.ptp(y2)))
     fig.savefig(params['saveto']+'weights_pca2.pdf')
     plt.close(fig)

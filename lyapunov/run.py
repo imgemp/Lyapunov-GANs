@@ -274,14 +274,14 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     plt.title('p2px='+str(np.ptp(x))+', p2py='+str(np.ptp(y)))
     fig.savefig(params['saveto']+'weights_pca.pdf')
     plt.close(fig)
-    embed()
+
     print('Plotting PCA of normalized trajectory...')
     ipca2 = IncrementalPCA(n_components=2, batch_size=10)
     weights_normalized = (weights - weights.min(axis=0))/(np.ptp(weights, axis=0)+1e-10)
     X_ipca2 = ipca2.fit_transform(weights_normalized)
     fig, ax = plt.subplots()
     path2 = mpath.Path(X_ipca2)
-    verts2 = path.interpolated(steps=3).vertices
+    verts2 = path2.interpolated(steps=3).vertices
     x2, y2 = verts2[:, 0], verts2[:, 1]
     z2 = np.linspace(0, 1, len(x2))
     colorline(x2, y2, z2, cmap=plt.get_cmap('Greys'), linewidth=2)

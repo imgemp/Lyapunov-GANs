@@ -263,27 +263,27 @@ class Train(object):
 
         # 5. Compute Lyapunov exponents after initial "burn-in"
         if it >= self.m.params['start_lam_it']:
-            # 5a-f. Loop over psis, perturb, and update: psi = [F(x_k + self.epsilon*psi) - F(x_k)]/self.epsilon
+            # 5a. Project weights
+            psi_norms_old = np.zeros(self.K)
             for k in range(self.K):
-                # 5a. Project weights
-                psi_norms = np.zeros(self.K)
+                for i in range(len(self.psi_d[k])):
+                    proj_weights[k] += torch.sum(self.psi_d[k][i]*Dp[i]).item()
+                    psi_norms_old[k] += torch.sum(self.psi_d[k][i]**2).item()
+                for i in range(len(self.psi_g[k])):
+                    proj_weights[k] += torch.sum(self.psi_g[k][i]*Gp[i]).item()
+                    psi_norms_old[k] += torch.sum(self.psi_g[k][i]**2).item()
+            if self.req_aux:
                 for k in range(self.K):
-                    for i in range(len(self.psi_d[k])):
-                        proj_weights[k] += torch.sum(self.psi_d[k][i]*Dp[i]).detach().item()
-                        psi_norms[k] += torch.sum(self.psi_d[k][i]**2).detach().item()
-                    for i in range(len(self.psi_g[k])):
-                        proj_weights[k] += torch.sum(self.psi_g[k][i]*Gp[i]).detach().item()
-                        psi_norms[k] += torch.sum(self.psi_g[k][i]**2).detach().item()
-                if self.req_aux:
-                    for k in range(self.K):
-                        for i in range(len(self.psi_d_a[k])):
-                            proj_weights[k] += torch.sum(self.psi_d_a[k][i]*Dp[i]).detach().item()
-                            psi_norms[k] += torch.sum(self.psi_d_a[k][i]**2).detach().item()
-                        for i in range(len(self.psi_g_a[k])):
-                            proj_weights[k] += torch.sum(self.psi_g_a[k][i]*Gp[i]).detach().item()
-                            psi_norms[k] += torch.sum(self.psi_g_a[k][i]**2).detach().item()
-                proj_weights /= psi_norms
+                    for i in range(len(self.psi_d_a[k])):
+                        proj_weights[k] += torch.sum(self.psi_d_a[k][i]*Dp[i]).item()
+                        psi_norms_old[k] += torch.sum(self.psi_d_a[k][i]**2).item()
+                    for i in range(len(self.psi_g_a[k])):
+                        proj_weights[k] += torch.sum(self.psi_g_a[k][i]*Gp[i]).item()
+                        psi_norms_old[k] += torch.sum(self.psi_g_a[k][i]**2).item()
+            proj_weights /= psi_norms_old
 
+            # 5b-f. Loop over psis, perturb, and update: psi = [F(x_k + self.epsilon*psi) - F(x_k)]/self.epsilon
+            for k in range(self.K):
                 # 5b. Perturb parameters
                 for i,p in enumerate(self.m.D.parameters()):
                     p.data = (p.data + self.epsilon*self.psi_d[k][i]).detach()

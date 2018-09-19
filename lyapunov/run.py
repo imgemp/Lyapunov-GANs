@@ -179,7 +179,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     np_samples = []
     ds = [] # first gradients 
     gs = []
-    ls = []
+    les = []
     pws = []
     viz_every = params['viz_every']
 
@@ -199,7 +199,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         gs.append(g)
 
         if i >= params['start_lam_it']:
-            ls.append(lams)
+            les.append(lams)
             pws.append(pw)
             save_weights(m.D,params['saveto']+'weights/D_'+str(i)+'.pkl')
             save_weights(m.G,params['saveto']+'weights/G_'+str(i)+'.pkl')
@@ -219,7 +219,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
             data.plot_current(train, params, i)
             if i >= params['start_lam_it']:
                 fig = plt.figure()
-                plt.plot(np.vstack(ls))
+                plt.plot(np.vstack(les))
                 fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
                 plt.close(fig)
             if i >= params['start_lam_it']+1:
@@ -237,6 +237,8 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     np.savetxt(params['saveto']+'d_norm.out',np.array(ds))
     np.savetxt(params['saveto']+'g_norm.out',np.array(gs))
     np.savetxt(params['saveto']+'loss.out',np.array(fs))
+    np.savetxt(params['saveto']+'les.out',np.vstack(les))
+    np.savetxt(params['saveto']+'pws.out',np.vstack(pws))
 
     print('Plotting gradient norms...')
     fig = plt.figure()

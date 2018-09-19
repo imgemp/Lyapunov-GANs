@@ -5,6 +5,10 @@ Image grid saver, based on color_grid_vis from github.com/Newmu
 import pickle
 import numpy as np
 import torch
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.collections as mcoll
 
 
 def gpu_helper(gpu):

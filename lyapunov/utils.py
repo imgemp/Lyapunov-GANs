@@ -100,3 +100,9 @@ def intersection(x, y, sub=0):
         return range(lo, hi+1)
     else:
         return None
+
+def shift_range(rng, shift=0):
+    if rng is not None:
+        return range(rng.start+shift, rng.stop+shift, rng.step)
+    else:
+        return None

@@ -220,6 +220,11 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
             if i >= params['start_lam_it']:
                 fig = plt.figure()
                 plt.plot(np.vstack(les))
+                mn, mx = np.min(les), np.max(les)
+                plt.plot([params['freeze_d_its'][0]-params['start_lam_it']]*2,[mn,mx], '--', color='dodgerblue')
+                plt.plot([params['freeze_d_its'][1]-params['start_lam_it']]*2,[mn,mx], '--', color='dodgerblue')
+                plt.plot([params['freeze_g_its'][0]-params['start_lam_it']]*2,[mn,mx], '--', color='r')
+                plt.plot([params['freeze_g_its'][1]-params['start_lam_it']]*2,[mn,mx], '--', color='r')
                 fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
                 plt.close(fig)
             if i >= params['start_lam_it']+1:

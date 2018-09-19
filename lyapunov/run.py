@@ -22,7 +22,7 @@ import sys
 sys.path.append('../')
 
 from lyapunov.core import Manager
-from lyapunov.utils import gpu_helper, save_weights, flatten_nested, colorline
+from lyapunov.utils import gpu_helper, save_weights, flatten_nested, colorline, intersection
 
 from tqdm import tqdm
 
@@ -278,14 +278,20 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     ipca = IncrementalPCA(n_components=2, batch_size=10)
     X_ipca = ipca.fit_transform(weights)
     fig, ax = plt.subplots()
-    # cut = min(params['freeze_d_its'][0],params['freeze_g_its'][0])
-    cut = params['freeze_d_its'][0] - params['start_lam_it']
     path = mpath.Path(X_ipca[:cut])
     verts = path.interpolated(steps=1).vertices
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
     colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
-    plt.plot(X_ipca[cut:,0], X_ipca[cut:, 1], 'b-', lw=0.2)
+    d_rng = intersection(params['freeze_d_its'], (params['start_lam_it'],params['max_iter']), sub=params['start_lam_it'])
+    if d_rng is not None:
+        plt.plot(X_ipca[d_rng,0], X_ipca[d_rng, 1], 'b-', lw=0.2)
+    g_rng = intersection(params['freeze_g_its'], (params['start_lam_it'],params['max_iter']), sub=params['start_lam_it'])
+    if g_rng is not None:
+        plt.plot(X_ipca[g_rng,0], X_ipca[g_rng, 1], 'r-', lw=0.2)
+    if d_rng is not None and g_rng is not None:
+        both_rng = intersection(list(d_rng), list(g_rng))
+        plt.plot(X_ipca[both_rng,0], X_ipca[both_rng, 1], 'g-', lw=0.2)
     ax.set_xlim([X_ipca[:,0].min(), X_ipca[:,0].max()])
     ax.set_ylim([X_ipca[:,1].min(), X_ipca[:,1].max()])
     plt.title('p2px='+str(np.ptp(x))+', p2py='+str(np.ptp(y)))

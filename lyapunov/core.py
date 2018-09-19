@@ -269,19 +269,19 @@ class Train(object):
                 psi_norms = np.zeros(self.K)
                 for k in range(self.K):
                     for i in range(len(self.psi_d[k])):
-                        proj_weights[k] += (self.psi_d[k][i]*Dp[i]).detach().item()
-                        psi_norms[k] += sum(self.psi_d[k][i]**2).detach().item()
+                        proj_weights[k] += torch.sum(self.psi_d[k][i]*Dp[i]).detach().item()
+                        psi_norms[k] += torch.sum(self.psi_d[k][i]**2).detach().item()
                     for i in range(len(self.psi_g[k])):
-                        proj_weights[k] += (self.psi_g[k][i]*Gp[i]).detach().item()
-                        psi_norms[k] += sum(self.psi_g[k][i]**2).detach().item()
+                        proj_weights[k] += torch.sum(self.psi_g[k][i]*Gp[i]).detach().item()
+                        psi_norms[k] += torch.sum(self.psi_g[k][i]**2).detach().item()
                 if self.req_aux:
                     for k in range(self.K):
                         for i in range(len(self.psi_d_a[k])):
-                            proj_weights[k] += (self.psi_d_a[k][i]*Dp[i]).detach().item()
-                            psi_norms[k] += sum(self.psi_d_a[k][i]**2).detach().item()
+                            proj_weights[k] += torch.sum(self.psi_d_a[k][i]*Dp[i]).detach().item()
+                            psi_norms[k] += torch.sum(self.psi_d_a[k][i]**2).detach().item()
                         for i in range(len(self.psi_g_a[k])):
-                            proj_weights[k] += (self.psi_g_a[k][i]*Gp[i]).detach().item()
-                            psi_norms[k] += sum(self.psi_g_a[k][i]**2).detach().item()
+                            proj_weights[k] += torch.sum(self.psi_g_a[k][i]*Gp[i]).detach().item()
+                            psi_norms[k] += torch.sum(self.psi_g_a[k][i]**2).detach().item()
                 proj_weights /= psi_norms
 
                 # 5b. Perturb parameters

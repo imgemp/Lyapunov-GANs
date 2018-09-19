@@ -22,7 +22,7 @@ import sys
 sys.path.append('../')
 
 from lyapunov.core import Manager
-from lyapunov.utils import gpu_helper, save_weights, load_weights
+from lyapunov.utils import gpu_helper, save_weights, flatten_nested, colorline
 
 from tqdm import tqdm
 
@@ -222,8 +222,10 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
                 plt.plot(np.vstack(ls))
                 fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
                 plt.close(fig)
+            if i >= params['start_lam_it']+1:
                 fig = plt.figure()
-                plt.plot(*np.split(np.vstack(pws),2,axis=1))
+                z = np.linspace(0, 1, len(pws))
+                colorline(*np.split(np.vstack(pws),2,axis=1), z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
                 fig.savefig(params['saveto']+'projected_traj.pdf') 
                 plt.close(fig)
 
@@ -336,56 +338,6 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         data.plot_series(np_samples, params)
 
     print('Complete.')
-
-
-def flatten_nested(a):
-    return np.concatenate([ai.flatten() for ai in a])
-
-
-def colorline(
-    x, y, z=None, cmap=plt.get_cmap('copper'), norm=plt.Normalize(0.0, 1.0),
-        linewidth=3, alpha=1.0):
-    """
-    http://nbviewer.ipython.org/github/dpsanders/matplotlib-examples/blob/master/colorline.ipynb
-    http://matplotlib.org/examples/pylab_examples/multicolored_line.html
-    Plot a colored line with coordinates x and y
-    Optionally specify colors in the array z
-    Optionally specify a colormap, a norm function and a line width
-    """
-
-    # Default colors equally spaced on [0,1]:
-    if z is None:
-        z = np.linspace(0.0, 1.0, len(x))
-
-    # Special case if a single number:
-    if not hasattr(z, "__iter__"):  # to check for numerical input -- this is a hack
-        z = np.array([z])
-
-    z = np.asarray(z)
-
-    segments = make_segments(x, y)
-    lc = mcoll.LineCollection(segments, array=z, cmap=cmap, norm=norm,
-                              linewidth=linewidth, alpha=alpha)
-
-    ax = plt.gca()
-    ax.add_collection(lc)
-
-    ax.set_xlim([x.min(),x.max()])
-    ax.set_ylim([y.min(),y.max()])
-
-    return lc
-
-
-def make_segments(x, y):
-    """
-    Create list of line segments from x and y coordinates, in the correct format
-    for LineCollection: an array of the form numlines x (points per line) x 2 (x
-    and y) array
-    """
-
-    points = np.array([x, y]).T.reshape(-1, 1, 2)
-    segments = np.concatenate([points[:-1], points[1:]], axis=1)
-    return segments
 
 
 if __name__ == '__main__':

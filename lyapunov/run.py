@@ -180,6 +180,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     ds = [] # first gradients 
     gs = []
     ls = []
+    pws = []
     viz_every = params['viz_every']
 
     iterations = range(params['max_iter'])
@@ -188,7 +189,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
 
     for i in iterations:
         
-        lams, d, g, f = train.train_op(i)
+        lams, d, g, f, pw = train.train_op(i)
         
         if params['verbose']:
             iterations.set_postfix({'Lambda':lams,'||F_D||^2':d,'||F_G||^2':g,'V':f, 'Mem': process.memory_info().rss})
@@ -199,6 +200,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
 
         if i >= params['start_lam_it']:
             ls.append(lams)
+            pws.append(pw)
             save_weights(m.D,params['saveto']+'weights/D_'+str(i)+'.pkl')
             save_weights(m.G,params['saveto']+'weights/G_'+str(i)+'.pkl')
             if train.req_aux:
@@ -219,6 +221,10 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
                 fig = plt.figure()
                 plt.plot(np.vstack(ls))
                 fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
+                plt.close(fig)
+                fig = plt.figure()
+                plt.plot(*np.split(np.vstack(pws),2,axis=1))
+                fig.savefig(params['saveto']+'projected_traj.pdf') 
                 plt.close(fig)
 
         if params['weights_every'] > 0 and i % params['weights_every'] == 0:

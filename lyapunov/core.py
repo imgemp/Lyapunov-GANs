@@ -209,6 +209,9 @@ class Train(object):
         psi = np.vstack([np.eye(self.K), np.zeros((2*sum(d_dims)+2*sum(g_dims)-self.K, self.K))])
         psi_split = np.split(psi, indices_or_sections=np.cumsum(2*(d_dims+g_dims))[:-1], axis=0)
 
+        print('NOTE: Discriminator dimensionality = {:d}.'.format(sum(d_dims)))
+        print('NOTE: Generator dimensionality = {:d}.'.format(sum(g_dims)))
+
         Ks = range(self.K)
         self.psi_d = [[self.m.to_gpu(torch.tensor(psi_split[i][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
         self.psi_g = [[self.m.to_gpu(torch.tensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
@@ -252,7 +255,9 @@ class Train(object):
             fake_z = self.m.get_z(self.m.params['batch_size'], self.m.params['z_dim'])
 
         # 4. Evaluate Map
-        _, _, map_d, map_g, map_aux_d, map_aux_g, V, norm_d, norm_g = detach_all(self.cmap([real_data, self.m.G(fake_z), self.aux_d, self.aux_g]))
+        freeze_d = (it in range(*self.m.params['freeze_d_its']))
+        freeze_g = (it in range(*self.m.params['freeze_g_its']))
+        _, _, map_d, map_g, map_aux_d, map_aux_g, V, norm_d, norm_g = detach_all(self.cmap([real_data, self.m.G(fake_z), freeze_d, freeze_g, self.aux_d, self.aux_g]))
 
         # 5. Compute Lyapunov exponents after initial "burn-in"
         if it >= self.m.params['start_lam_it']:
@@ -269,8 +274,7 @@ class Train(object):
                     for i,a in enumerate(self.aux_g):
                         a.data = (a.data + self.epsilon*self.psi_g_a[k][i]).detach()
                 # 5b. Evaluate map
-                _, _, map_psi_d, map_psi_g, map_psi_aux_d, map_psi_aux_g, _, _, _ = detach_all(self.cmap([real_data, self.m.G(fake_z), self.aux_d, self.aux_g]))
-
+                _, _, map_psi_d, map_psi_g, map_psi_aux_d, map_psi_aux_g, _, _, _ = detach_all(self.cmap([real_data, self.m.G(fake_z), freeze_d, freeze_g, self.aux_d, self.aux_g]))
                 # 5c. Update psi[k]
                 for i,psi in enumerate(self.psi_d[k]):
                     psi.sub_(self.m.params['disc_learning_rate']*(map_psi_d[i]-map_d[i])/self.epsilon)

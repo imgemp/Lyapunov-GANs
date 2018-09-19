@@ -66,6 +66,8 @@ def parse_params():
     parser.add_argument('-LE_freq','--LE_freq', type=int, default=5, help='number of steps to wait inbetween computing LEs', required=False)
     parser.add_argument('-LE_batch_mult','--LE_batch_mult', type=int, default=10, help='batch_size multiplier to reduce variance when computing LEs', required=False)
     parser.add_argument('-start_lam_it','--start_lam_it', type=int, default=-1, help='number of steps to wait inbetween computing LEs', required=False)
+    parser.add_argument('-freeze_d_its','--freeze_d_its', type=int, nargs=2, default=[-1,-1], help='iteration range for which to freeze the discriminator', required=False)
+    parser.add_argument('-freeze_g_its','--freeze_g_its', type=int, nargs=2, default=[-1,-1], help='iteration range for which to freeze the generator', required=False)
     parser.add_argument('-det','--deterministic', type=lambda x: (str(x).lower() == 'true'), default=False, help='whether to compute loss always using same samples', required=False)
     parser.add_argument('-saveto','--saveto', type=str, default='', help='path prefix for saving results', required=False)
     parser.add_argument('-gpu','--gpu', type=int, default=-2, help='if/which gpu to use (-1: all, -2: None)', required=False)
@@ -266,11 +268,16 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     ipca = IncrementalPCA(n_components=2, batch_size=10)
     X_ipca = ipca.fit_transform(weights)
     fig, ax = plt.subplots()
-    path = mpath.Path(X_ipca)
+    # cut = min(params['freeze_d_its'][0],params['freeze_g_its'][0])
+    cut = params['freeze_d_its'][0] - params['start_lam_it']
+    path = mpath.Path(X_ipca[:cut])
     verts = path.interpolated(steps=1).vertices
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
     colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
+    plt.plot(X_ipca[cut:,0], X_ipca[cut:, 1], 'b-', lw=0.2)
+    ax.set_xlim([X_ipca[:,0].min(), X_ipca[:,0].max()])
+    ax.set_ylim([X_ipca[:,1].min(), X_ipca[:,1].max()])
     plt.title('p2px='+str(np.ptp(x))+', p2py='+str(np.ptp(y)))
     fig.savefig(params['saveto']+'weights_pca.pdf')
     plt.close(fig)

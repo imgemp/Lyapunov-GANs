@@ -278,7 +278,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     ipca = IncrementalPCA(n_components=2, batch_size=10)
     X_ipca = ipca.fit_transform(weights)
     fig, ax = plt.subplots()
-    path = mpath.Path(X_ipca[:cut])
+    path = mpath.Path(X_ipca)
     verts = path.interpolated(steps=1).vertices
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))

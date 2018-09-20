@@ -75,8 +75,8 @@ def colorline(
     ax = plt.gca()
     ax.add_collection(lc)
 
-    ax.set_xlim([x.min(),x.max()])
-    ax.set_ylim([y.min(),y.max()])
+    ax.set_xlim([np.nanmin(x),np.nanmax(x)])
+    ax.set_ylim([np.nanmin(y),np.nanmax(y)])
 
     return lc
 

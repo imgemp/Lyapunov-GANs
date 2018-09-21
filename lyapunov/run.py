@@ -53,7 +53,7 @@ def parse_params():
     parser.add_argument('-mx_it','--max_iter', type=int, default=100001, help='max # of training iterations', required=False)
     parser.add_argument('-viz_every','--viz_every', type=int, default=1000, help='skip viz_every iterations between plotting current results', required=False)
     parser.add_argument('-series_every','--series_every', type=int, default=25000, help='skip series_every iterations between plotting series plot', required=False)
-    parser.add_argument('-w_every','--weights_every', type=int, default=25000, help='skip weights_every iterations between saving weights', required=False)
+    parser.add_argument('-w_every','--weights_every', type=int, default=100, help='skip weights_every iterations between saving weights', required=False)
     parser.add_argument('-n_viz','--n_viz', type=int, default=5120, help='number of samples for series plot', required=False)
     parser.add_argument('-zdim','--z_dim', type=int, default=256, help='dimensionality of p(z) - unit normal', required=False)
     parser.add_argument('-xdim','--x_dim', type=int, default=2, help='dimensionality of p(x) - data distribution', required=False)
@@ -78,6 +78,7 @@ def parse_params():
         args['psi_epsilon'] = 0.01*min(args['disc_learning_rate'],args['gen_learning_rate'])
     if args['start_lam_it'] < 0.:
         args['start_lam_it'] = int(0.9*args['max_iter'])
+    args['weights_every'] = int(np.clip(args['weights_every'], 1, max(args['max_iter']//2,1)))
 
     if args['domain'] == 'MO8G':
         from examples.domains.synthetic import MOG_Circle as Domain
@@ -201,17 +202,6 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         if i >= params['start_lam_it']:
             les.append(lams)
             pws.append(pw)
-            save_weights(m.D,params['saveto']+'weights/D_'+str(i)+'.pkl')
-            save_weights(m.G,params['saveto']+'weights/G_'+str(i)+'.pkl')
-            if train.req_aux:
-                aux_d = []
-                for a in train.aux_d:
-                    aux_d += [a.cpu().data.numpy()]
-                aux_g = []
-                for a in train.aux_g:
-                    aux_g += [a.cpu().data.numpy()]
-                pickle.dump(aux_d,open(params['saveto']+'weights/D_aux_'+str(i)+'.pkl','wb'))
-                pickle.dump(aux_g,open(params['saveto']+'weights/G_aux_'+str(i)+'.pkl','wb'))
 
         if viz_every > 0 and i % viz_every == 0:
             if params['n_viz'] > 0:
@@ -235,8 +225,17 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
                 plt.close(fig)
 
         if params['weights_every'] > 0 and i % params['weights_every'] == 0:
-            save_weights(m.D,params['saveto']+'D_'+str(i)+'.pkl')
-            save_weights(m.G,params['saveto']+'G_'+str(i)+'.pkl')
+            save_weights(m.D,params['saveto']+'weights/D_'+str(i)+'.pkl')
+            save_weights(m.G,params['saveto']+'weights/G_'+str(i)+'.pkl')
+            if train.req_aux:
+                aux_d = []
+                for a in train.aux_d:
+                    aux_d += [a.cpu().data.numpy()]
+                aux_g = []
+                for a in train.aux_g:
+                    aux_g += [a.cpu().data.numpy()]
+                pickle.dump(aux_d,open(params['saveto']+'weights/D_aux_'+str(i)+'.pkl','wb'))
+                pickle.dump(aux_g,open(params['saveto']+'weights/G_aux_'+str(i)+'.pkl','wb'))
                  
 
     ds = np.asarray(ds)
@@ -295,7 +294,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
 
     print('Loading weights from saved files...')
     weights = []
-    for w_i in range(params['start_lam_it'],params['max_iter']):
+    for w_i in range(params['start_lam_it'],params['weights_every'],params['max_iter']):
         w_D = flatten_nested(pickle.load(open(params['saveto']+'weights/D_'+str(w_i)+'.pkl','rb')))
         w_G = flatten_nested(pickle.load(open(params['saveto']+'weights/G_'+str(w_i)+'.pkl','rb')))
         weights.append(np.hstack([w_D,w_G]))

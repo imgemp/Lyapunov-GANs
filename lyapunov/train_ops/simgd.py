@@ -18,7 +18,15 @@ class SimGD(Map):
         d_error = -Vsum
         g_error = V_fake_g
 
-        # 3. Compute gradients
+        # 3. Add weight decay
+        if self.m.params['disc_weight_decay'] > 0:
+            Dnorm = sum([torch.sum(p**2.) for p in self.m.D.parameters()])
+            d_error = d_error + 0.5*self.m.params['disc_weight_decay']*Dnorm
+        if self.m.params['gen_weight_decay'] > 0:
+            Gnorm = sum([torch.sum(p**2.) for p in self.m.G.parameters()])
+            g_error = g_error + 0.5*self.m.params['gen_weight_decay']*Gnorm
+
+        # 4. Compute gradients
         d_error_grad = torch.autograd.grad(d_error, self.m.D.parameters(), create_graph=True)
         g_error_grad = torch.autograd.grad(g_error, self.m.G.parameters(), create_graph=True)
         if freeze_d: d_error_grad = [0*g for g in d_error_grad]

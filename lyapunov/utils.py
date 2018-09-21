@@ -37,10 +37,12 @@ def load_weights(module,file):
 def detach_all(a):
     detached = []
     for ai in a:
-        if isinstance(ai, list):
+        if isinstance(ai, list) or isinstance(ai, tuple):
             detached += [detach_all(ai)]
-        else:
+        elif ai is not None:
             detached += [ai.detach()]
+        else:
+            detached += [None]
     return detached
 
 def flatten_nested(a):

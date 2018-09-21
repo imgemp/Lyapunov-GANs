@@ -57,7 +57,7 @@ def parse_params():
     parser.add_argument('-n_viz','--n_viz', type=int, default=5120, help='number of samples for series plot', required=False)
     parser.add_argument('-zdim','--z_dim', type=int, default=256, help='dimensionality of p(z) - unit normal', required=False)
     parser.add_argument('-xdim','--x_dim', type=int, default=2, help='dimensionality of p(x) - data distribution', required=False)
-    parser.add_argument('-maps','--map_strings', type=str, nargs='+', default=[''], help='string names of optimizers to use for generator and discriminator', required=False)
+    parser.add_argument('-maps','--map_strings', type=str, nargs='+', default=[], help='string names of optimizers to use for generator and discriminator', required=False)
     parser.add_argument('-gam','--gamma', type=float, default=10., help='gamma parameter for consensus, reg, reg_alt, and cc', required=False)
     parser.add_argument('-gamT','--gammaT', type=float, default=-1e11, help='gamma parameter for JTF in cc algorithm', required=False)
     parser.add_argument('-kap','--kappa', type=float, default=0., help='kappa parameter for F in cc algorithm', required=False)
@@ -75,7 +75,7 @@ def parse_params():
     args = vars(parser.parse_args())
 
     if args['psi_epsilon'] <= 0.:
-        args['psi_epsilon'] = 0.1*min(args['disc_learning_rate'],args['gen_learning_rate'])
+        args['psi_epsilon'] = 0.01*min(args['disc_learning_rate'],args['gen_learning_rate'])
     if args['start_lam_it'] < 0.:
         args['start_lam_it'] = int(0.9*args['max_iter'])
 

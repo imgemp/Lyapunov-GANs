@@ -281,6 +281,9 @@ class Train(object):
                         proj_weights[k] += torch.sum(self.psi_g_a[k][i]*Gp[i]).item()
                         psi_norms_old[k] += torch.sum(self.psi_g_a[k][i]**2).item()
             proj_weights /= psi_norms_old
+            if np.any(np.abs(psi_norms_old-1.)>=0.01):
+                print('Lyapunov Vectors (Psi) have drifted away from unit-norm!')
+                embed()
 
             # 5b-f. Loop over psis, perturb, and update: psi = [F(x_k + self.epsilon*psi) - F(x_k)]/self.epsilon
             for k in range(self.K):
@@ -323,21 +326,15 @@ class Train(object):
             # 5g-j. Orthogonalize psis, compute norms, normalize psis, and update Lyapunov exponents
             if (it+1 - self.m.params['start_lam_it']) % self.m.params['LE_freq'] == 0:
                 # 5g. Compute norms of columns of Psi
-                psi_d_norms_squared = [sum([torch.sum(psi**2) for psi in psi_k]) for psi_k in self.psi_d]
-                psi_g_norms_squared = [sum([torch.sum(psi**2) for psi in psi_k]) for psi_k in self.psi_g]
-                norms = [psi_d_norms_squared, psi_g_norms_squared]
                 psis = [self.psi_d, self.psi_g]
                 if self.req_aux:
-                    psi_d_a_norms_squared = [sum([torch.sum(psi**2) for psi in psi_k]) for psi_k in self.psi_d_a]
-                    psi_g_a_norms_squared = [sum([torch.sum(psi**2) for psi in psi_k]) for psi_k in self.psi_g_a]
-                    norms += [psi_d_a_norms_squared, psi_g_a_norms_squared]
                     psis += [self.psi_d_a, self.psi_g_a]
-                psi_norms = [torch.sqrt(sum(norm)) for norm in zip(*norms)]
                 psis_sh = [functools.reduce(lambda x,y: x+y, ps) for ps in zip(*psis)]  # psis is 4 parameter dims x K x num weights
                 # this turns it into K x total num weights
 
                 # 5h. Gram Schmidt
-                psis_temp = list(zip(*self.GramSchmidt(psis_sh, psi_norms)))
+                psi_orth, psi_norms = self.GramSchmidt(psis_sh)
+                psis_temp = list(zip(*psi_orth))
                 self.psi_d = [list(el) for el in zip(*psis_temp[:self.num_d])]
                 self.psi_g = [list(el) for el in zip(*psis_temp[self.num_d:self.num_d+self.num_g])]
                 if self.req_aux:
@@ -365,6 +362,9 @@ class Train(object):
                 new_lam_dts = [np.log(psi_norm.item()) for psi_norm in psi_norms]  # actually equal to lambda*dt
                 Ts = [dt*(it - self.m.params['start_lam_it']) for dt in self.delta_ts]
                 self.lams = np.array([(lam*T+new_lam_dt)/(T+dt) for lam, new_lam_dt, T, dt in zip(self.lams, new_lam_dts, Ts, self.delta_ts)])
+                if np.any(np.isnan(self.lams)):
+                    print('Lyapunov Exponent is NaN!')
+                    embed()
 
         # 6. Accumulate F(x_k)
         self.m.D.accumulate_gradient(map_d) # compute/store map, but don't change params
@@ -384,9 +384,10 @@ class Train(object):
         return self.lams, norm_d.item(), norm_g.item(), V.item(), proj_weights
 
     @staticmethod
-    def GramSchmidt(A, norms):
+    def GramSchmidt(A):
         # only orthogonalizes, no normalization
         # assumes A is list of vectors
+        uu = []
         if len(A) > 1:
             for i in range(len(A)):
                 vi = A[i]
@@ -394,12 +395,13 @@ class Train(object):
                 for j in range(i):
                     uj = A[j]
                     viuj = sum([torch.sum(vip*ujp) for vip, ujp in zip(vi,uj)])
-                    factor = viuj/norms[j]
+                    factor = viuj/uu[j]
                     for p in range(len(proj)):
                         proj[p] += factor*uj[p]
                 for p in range(len(A[i])):
                     A[i][p] -= proj[p]
-        return A
+                uu += [sum([torch.sum(uip**2) for uip in A[i]])]
+        return A, [torch.sqrt(uuk) for uuk in uu]
 
     @staticmethod
     def compose(*functions):

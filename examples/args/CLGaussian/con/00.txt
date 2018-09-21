@@ -1,0 +1,16 @@
+-dom CLGaussian
+-bs 512
+-div Wasserstein
+-d_lr 1e-3
+-g_lr 1e-3
+-mx_it 10001
+-viz_every 100
+-zdim 1
+-xdim 1
+-gam 1.
+-maps consensus
+-start_lam_it 0
+-LE_freq 1
+-LE_batch_mult 2
+-det True
+-saveto examples/results/CLGaussian/con/

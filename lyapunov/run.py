@@ -295,7 +295,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
 
     print('Loading weights from saved files...')
     weights = []
-    for w_i in range(params['start_lam_it'],params['weights_every'],params['max_iter']):
+    for w_i in range(params['start_lam_it'],params['max_iter'],params['weights_every']):
         w_D = flatten_nested(pickle.load(open(params['saveto']+'weights/D_'+str(w_i)+'.pkl','rb')))
         w_G = flatten_nested(pickle.load(open(params['saveto']+'weights/G_'+str(w_i)+'.pkl','rb')))
         weights.append(np.hstack([w_D,w_G]))

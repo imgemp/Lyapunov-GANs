@@ -1,3 +1,4 @@
+import argparse
 import pickle
 import numpy as np
 import matplotlib as mpl
@@ -25,29 +26,51 @@ def parse_params():
 
 
 def eval(filepath):
+    params = {}
     with open(filepath+'args.txt', 'r') as f:
         keys, vals = [], []
         for line in f:
-            elements = line.split(' ')
-            key, _val = elements[0], elements[1:]
+            elements = line.strip('\n').split(' ')
+            key, val = elements[0], elements[1:]
             key = key.strip('--')
             keys += [key]
             vals += [val]
         temp = dict(zip(keys,vals))
-    params['saveto'] = temp['saveto']
-    params['start_lam_it'] = int(temp['start_lam_it'])
-    params['freeze_d_its'] = [int(it) for it in temp['freeze_d_its']]
-    params['freeze_g_its'] = [int(it) for it in temp['freeze_g_its']]
-    params['max_iter'] = int(temp['max_iter'])
-    params['weights_every'] = int(temp['weights_every'])
-    params['n_viz'] = int(temp['n_viz'])
-    params['viz_every'] = int(temp['viz_every'])
+    params['saveto'] = filepath
+    params['start_lam_it'] = int(temp['start_lam_it'][0])
+    params['freeze_d_its'] = [int(it.strip(',').strip('[').strip(']')) for it in temp['freeze_d_its']]
+    params['freeze_g_its'] = [int(it.strip(',').strip('[').strip(']')) for it in temp['freeze_g_its']]
+    params['max_iter'] = int(temp['max_iter'][0])
+    params['weights_every'] = int(temp['weights_every'][0])
+    params['n_viz'] = int(temp['n_viz'][0])
+    params['viz_every'] = int(temp['viz_every'][0])
+    params['x_dim'] = int(temp['x_dim'][0])
+    params['domain'] = temp['domain'][0]
+
+    if params['domain'] == 'MO8G':
+        from examples.domains.synthetic import MOG_Circle as Domain
+    elif params['domain'] == 'MO25G':
+        from examples.domains.synthetic import MOG_Grid as Domain
+    elif params['domain'] == 'SwissRoll':
+        from examples.domains.synthetic import SwissRoll as Domain
+    elif 'Gaussian' in params['domain']:
+        from examples.domains.synthetic import Gaussian as Domain
+    elif params['domain'] == 'MNIST':
+        from examples.domains.mnist import MNIST as Domain
+    elif params['domain'] == 'MNIST2':
+        from examples.domains.mnist2 import MNIST as Domain
+    elif params['domain'] == 'CIFAR10':
+        from examples.domains.cifar10 import CIFAR10 as Domain
+    else:
+        raise NotImplementedError(params['domain'])
+
+    data = Domain(dim=params['x_dim'])
 
     ds = np.loadtxt(params['saveto']+'d_norm.out')
-    np.loadtxt(params['saveto']+'g_norm.out')
-    np.loadtxt(params['saveto']+'loss.out')
-    np.loadtxt(params['saveto']+'les.out')
-    np.loadtxt(params['saveto']+'pws.out')
+    gs = np.loadtxt(params['saveto']+'g_norm.out')
+    fs = np.loadtxt(params['saveto']+'loss.out')
+    les = np.loadtxt(params['saveto']+'les.out')
+    pws = np.loadtxt(params['saveto']+'pws.out')
 
     d_rng = intersection(params['freeze_d_its'], (params['start_lam_it'],params['max_iter']-1))
     g_rng = intersection(params['freeze_g_its'], (params['start_lam_it'],params['max_iter']-1))
@@ -99,9 +122,9 @@ def eval(filepath):
         weights.append(np.hstack([w_D,w_G]))
     weights = np.vstack(weights)
 
-    d_rng = shift_range(d_rng, shift=-params['start_lam_it'])
-    g_rng = shift_range(g_rng, shift=-params['start_lam_it'])
-    both_rng = shift_range(both_rng, shift=-params['start_lam_it'])
+    d_rng = shift_range(d_rng, shift=-params['start_lam_it'], keep_every=params['weights_every'])
+    g_rng = shift_range(g_rng, shift=-params['start_lam_it'], keep_every=params['weights_every'])
+    both_rng = shift_range(both_rng, shift=-params['start_lam_it'], keep_every=params['weights_every'])
 
     print('Plotting PCA of trajectory...')
     ipca = IncrementalPCA(n_components=2, batch_size=10)
@@ -112,6 +135,7 @@ def eval(filepath):
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
     colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
+    embed()
     if d_rng is not None: plt.plot(X_ipca[d_rng,0], X_ipca[d_rng, 1], '-', color='dodgerblue', lw=0.5)
     if g_rng is not None: plt.plot(X_ipca[g_rng,0], X_ipca[g_rng, 1], 'r-', lw=0.5)
     if both_rng is not None: plt.plot(X_ipca[both_rng,0], X_ipca[both_rng, 1], '-', color='lime', lw=0.5)
@@ -176,7 +200,7 @@ def eval(filepath):
     print('Plotting sample series over epochs...')
     if params['n_viz'] > 0:
         np_samples = []
-        for viz_i in range(0,params['max_iter'],viz_every):
+        for viz_i in range(0,params['max_iter'],params['viz_every']):
             np_samples.append(np.load(params['saveto']+'samples/'+str(viz_i)+'.npy'))
         data.plot_series(np_samples, params)
 

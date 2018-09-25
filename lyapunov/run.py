@@ -188,6 +188,8 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     if params['verbose']:
         iterations = tqdm(iterations,desc=params['description'])
 
+    print('Saving results to: '+params['saveto'])
+
     for i in iterations:
         
         lams, d, g, f, pw = train.train_op(i)
@@ -301,9 +303,9 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         weights.append(np.hstack([w_D,w_G]))
     weights = np.vstack(weights)
 
-    d_rng = shift_range(d_rng, shift=-params['start_lam_it'])
-    g_rng = shift_range(g_rng, shift=-params['start_lam_it'])
-    both_rng = shift_range(both_rng, shift=-params['start_lam_it'])
+    d_rng = shift_range(d_rng, shift=-params['start_lam_it'], keep_every=params['weights_every'])
+    g_rng = shift_range(g_rng, shift=-params['start_lam_it'], keep_every=params['weights_every'])
+    both_rng = shift_range(both_rng, shift=-params['start_lam_it'], keep_every=params['weights_every'])
 
     print('Plotting PCA of trajectory...')
     ipca = IncrementalPCA(n_components=2, batch_size=10)
@@ -383,6 +385,8 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
         data.plot_series(np_samples, params)
 
     print('Complete.')
+
+    print('Saved results to: '+params['saveto'])
 
 
 if __name__ == '__main__':

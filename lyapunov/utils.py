@@ -103,8 +103,16 @@ def intersection(x, y, sub=0):
     else:
         return None
 
-def shift_range(rng, shift=0):
+def shift_range(rng, shift=0, keep_every=1, step=None):
     if rng is not None:
-        return range(rng.start+shift, rng.stop+shift, rng.step)
+        start = rng.start + shift
+        stop = rng.stop + shift
+        if step is None:
+            step = rng.step
+        if keep_every > 1:
+            spread = (stop-start)//keep_every + 1
+            stop = start + spread
+            step = 1
+        return range(start, stop, step)
     else:
         return None

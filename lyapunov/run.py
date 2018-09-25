@@ -118,6 +118,8 @@ def parse_params():
         elif mp.lower() == 'rmsprop':
             from lyapunov.train_ops.rmsprop import RMSProp
             args['maps'] += [RMSProp]
+        elif mp.lower() == 'simgd':
+            pass
         else:
             raise NotImplementedError(mp)
     from lyapunov.train_ops.simgd import SimGD
@@ -184,11 +186,11 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     pws = []
     viz_every = params['viz_every']
 
+    print('Saving results to: '+params['saveto'])
+
     iterations = range(params['max_iter'])
     if params['verbose']:
         iterations = tqdm(iterations,desc=params['description'])
-
-    print('Saving results to: '+params['saveto'])
 
     for i in iterations:
         

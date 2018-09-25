@@ -25,7 +25,7 @@ def parse_params():
     return args['saveto']
 
 
-def eval(filepath):
+def load_args(filepath):
     params = {}
     with open(filepath+'args.txt', 'r') as f:
         keys, vals = [], []
@@ -66,6 +66,10 @@ def eval(filepath):
 
     data = Domain(dim=params['x_dim'])
 
+    return data, params
+
+
+def post_eval(data, params):
     ds = np.loadtxt(params['saveto']+'d_norm.out')
     gs = np.loadtxt(params['saveto']+'g_norm.out')
     fs = np.loadtxt(params['saveto']+'loss.out')
@@ -209,4 +213,4 @@ def eval(filepath):
 
 if __name__ == '__main__':
     saveto = parse_params()
-    eval(saveto)
+    post_eval(*load_args(saveto))

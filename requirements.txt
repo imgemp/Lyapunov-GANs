@@ -4,5 +4,6 @@ numpy>=1.6.1
 scipy>=0.19.0
 scikit-learn>=0.18.1
 http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
+torchvision
 tqdm>=4.19.8
 seaborn>=0.8.1

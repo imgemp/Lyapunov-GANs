@@ -261,6 +261,8 @@ class Generator_L(GNet):
     def __init__(self, input_dim, n_hidden=128, output_dim=2, n_layer=2, nonlin='relu'):
         super(Generator_L, self).__init__()
         assert input_dim == output_dim
+        self.input_dim = input_dim
+        self.output_dim = output_dim
         self.linear = nn.Linear(input_dim, output_dim)
 
     def forward(self,x):
@@ -268,7 +270,7 @@ class Generator_L(GNet):
 
     def init_weights(self):
         nn.init.orthogonal_(self.linear.weight.data, gain=0.8)
-        self.linear.bias.data = torch.from_numpy(-1+2*np.random.rand(output_dim).astype('float32'))
+        self.linear.bias.data = torch.from_numpy(-1+2*np.random.rand(self.output_dim).astype('float32'))
 
 
 class Discriminator_Q(DNet):

@@ -211,10 +211,12 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
             pws.append(pw)
 
         if viz_every > 0 and i % viz_every == 0:
+
             if params['n_viz'] > 0:
                 np.save(params['saveto']+'samples/'+str(i), train.m.get_fake(params['n_viz'], params['z_dim']).cpu().data.numpy())
             data.plot_current(train, params, i)
-            if i >= params['start_lam_it']:
+
+            if i >= params['start_lam_it'] and params['K'] > 0:
                 fig = plt.figure()
                 plt.plot(np.vstack(les))
                 mn, mx = np.min(les), np.max(les)
@@ -225,7 +227,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
                 plt.title('LE range = ({:.2f},{:.2f})'.format(np.min(les[-1]),np.max(les[-1])))
                 fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
                 plt.close(fig)
-            if i >= params['start_lam_it']+1:
+            if i >= params['start_lam_it']+1 and params['K'] > 0:
                 fig = plt.figure()
                 z = np.linspace(0, 1, len(pws))
                 colorline(*np.split(np.vstack(pws),2,axis=1), z, cmap=plt.get_cmap('Greys'), linewidth=0.2)

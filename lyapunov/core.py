@@ -330,6 +330,7 @@ class Train(object):
 
             # 5g-j. Orthogonalize psis, compute norms, normalize psis, and update Lyapunov exponents
             if (it+1 - self.m.params['start_lam_it']) % self.m.params['LE_freq'] == 0:
+
                 # 5g. Compute norms of columns of Psi
                 psis = [self.psi_d, self.psi_g]
                 if self.req_aux:

@@ -7,7 +7,7 @@
 -viz_every 100
 -n_viz 5
 -zdim 256
--xdim 1024
+-xdim 32
 -gam 1.
 -maps rmsprop consensus
 -LE_freq 1

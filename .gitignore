@@ -15,6 +15,7 @@ main.pdf
 appendix.pdf
 notes.txt
 examples/domains/cifar10/
+examples/domains/mnist2/
 *.pdf
 *.zip
 

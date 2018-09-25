@@ -39,6 +39,7 @@ class CIFAR10(Data):
         img = torchvision.utils.make_grid(images)
         img = img / 2 + 0.5     # unnormalize
         plt.imshow(np.transpose(img.cpu().data.numpy(), (1, 2, 0)))
+        # plt.imshow(np.transpose(img, (1, 2, 0)))
         plt.xticks([]); plt.yticks([])
         plt.savefig(params['saveto']+'samples_{}.png'.format(i))
         plt.close()

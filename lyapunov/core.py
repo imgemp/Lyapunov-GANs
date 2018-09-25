@@ -138,6 +138,8 @@ class Manager(object):
             self.criterion = lambda dec, label: torch.mean(dec*(2.*label-1.))  #loss(dec, label) #torch.sum(dec)  #torch.sum(dec*(2.*label-1.))
         elif params['divergence'] == 'DummyTest':
             self.criterion = lambda dec, label: torch.mean(dec*(2.*label-1.))**2
+        else:
+            raise NotImplementedError(params['divergence']+' divergence not implemented.')
 
     def get_real(self, batch_size):
         return self.to_gpu(self.data.sample(batch_size))

@@ -72,6 +72,7 @@ def parse_params():
     parser.add_argument('-det','--deterministic', type=lambda x: (str(x).lower() == 'true'), default=False, help='whether to compute loss always using same samples', required=False)
     parser.add_argument('-saveto','--saveto', type=str, default='', help='path prefix for saving results', required=False)
     parser.add_argument('-gpu','--gpu', type=int, default=-2, help='if/which gpu to use (-1: all, -2: None)', required=False)
+    parser.add_argument('-gpu_alt','--gpu_alt', type=int, default=-2, help='if/which gpu to use (-1: all, -2: None)', required=False)
     parser.add_argument('-verb','--verbose', type=lambda x: (str(x).lower() == 'true'), default=False, help='whether to print progress to stdout', required=False)
     args = vars(parser.parse_args())
 
@@ -152,7 +153,7 @@ def parse_params():
     cuda_available = torch.cuda.is_available()
     if args['gpu'] >= -1 and cuda_available:
         torch.cuda.device(args['gpu'])
-        args['description'] += ' (gpu'+str(torch.cuda.current_device())+')'
+        args['description'] += ' (gpu'+str(args['gpu'])+'/'+str(args['gpu_alt'])+')'
     else:
         args['description'] += ' (cpu)'
 
@@ -163,6 +164,7 @@ def parse_params():
 
 def run_experiment(Train, Domain, Generator, Discriminator, params):
     to_gpu = gpu_helper(params['gpu'])
+    to_gpu_alt = gpu_helper(params['gpu_alt'])
 
     data = Domain(dim=params['x_dim'])
     G = Generator(input_dim=params['z_dim'],output_dim=params['x_dim'],n_hidden=params['gen_n_hidden'],
@@ -174,7 +176,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     G = to_gpu(G)
     D = to_gpu(D)
 
-    m = Manager(data, D, G, params, to_gpu)
+    m = Manager(data, D, G, params, to_gpu, to_gpu_alt)
 
     train = Train(manager=m)
 

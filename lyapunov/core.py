@@ -124,12 +124,13 @@ class DNet(nn.Module):
 
 
 class Manager(object):
-    def __init__(self, data, D, G, params, to_gpu):
+    def __init__(self, data, D, G, params, to_gpu, to_gpu_alt):
         self.data = data
         self.D = D
         self.G = G
         self.params = params
         self.to_gpu = to_gpu
+        self.to_gpu_alt = to_gpu_alt
         self.z_rand = Uniform(to_gpu(torch.tensor(0.0)), to_gpu(torch.tensor(1.0)))
         if params['divergence'] == 'JS' or params['divergence'] == 'standard':
             loss = nn.BCEWithLogitsLoss()
@@ -217,11 +218,11 @@ class Train(object):
         print('NOTE: Generator dimensionality = {:d}.'.format(sum(g_dims)))
 
         Ks = range(self.K)
-        self.psi_d = [[self.m.to_gpu(torch.tensor(psi_split[i][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
-        self.psi_g = [[self.m.to_gpu(torch.tensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
+        self.psi_d = [[self.m.to_gpu_alt(torch.tensor(psi_split[i][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
+        self.psi_g = [[self.m.to_gpu_alt(torch.tensor(psi_split[i+len(d_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
         if self.req_aux:
-            self.psi_d_a = [[self.m.to_gpu(torch.tensor(psi_split[i+len(d_dims)+len(g_dims)][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
-            self.psi_g_a = [[self.m.to_gpu(torch.tensor(psi_split[i+2*len(d_dims)+len(g_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
+            self.psi_d_a = [[self.m.to_gpu_alt(torch.tensor(psi_split[i+len(d_dims)+len(g_dims)][:,k].reshape(*d_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(d_dims))] for k in Ks]
+            self.psi_g_a = [[self.m.to_gpu_alt(torch.tensor(psi_split[i+2*len(d_dims)+len(g_dims)][:,k].reshape(*g_shapes[i]).astype('float32'), requires_grad=False)) for i in range(len(g_dims))] for k in Ks]
 
         self.lams = np.zeros(self.K)
 

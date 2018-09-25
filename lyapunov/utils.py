@@ -12,9 +12,10 @@ import matplotlib.collections as mcoll
 
 
 def gpu_helper(gpu):
-    if gpu >= -1:
+    if gpu >= 0:
         def to_gpu(x):
-            x = x.cuda()
+            device = torch.device('cuda:'+str(gpu))
+            x = x.to(device)
             return x
         return to_gpu
     else:

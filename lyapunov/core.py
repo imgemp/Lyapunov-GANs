@@ -136,6 +136,8 @@ class Manager(object):
             self.criterion = lambda dec, label: -loss(dec, label)
         elif params['divergence'] == 'Wasserstein':
             self.criterion = lambda dec, label: torch.mean(dec*(2.*label-1.))  #loss(dec, label) #torch.sum(dec)  #torch.sum(dec*(2.*label-1.))
+        elif params['divergence'] == 'DummyTest':
+            self.criterion = lambda dec, label: torch.mean(dec*(2.*label-1.))**2
 
     def get_real(self, batch_size):
         return self.to_gpu(self.data.sample(batch_size))
@@ -166,7 +168,7 @@ class Manager(object):
             if self.params['divergence'] == 'standard':
                 V_fake_mod = -self.criterion(fake_dec, self.to_gpu(Variable(torch.ones(fake_dec.shape[0]))))  # we want to fool, so pretend it's all genuine
                 res += [V_fake_mod]
-            elif self.params['divergence'] == 'JS' or self.params['divergence'] == 'Wasserstein':
+            elif self.params['divergence'] == 'JS' or self.params['divergence'] == 'Wasserstein' or self.params['divergence'] == 'DummyTest':
                 res += [V_fake]
             else:
                 raise NotImplementedError(self.params['divergence'])

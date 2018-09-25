@@ -11,7 +11,7 @@
 -gam 1.
 -maps rmsprop consensus
 -LE_freq 1
--LE_batch_mult 2
+-LE_batch_mult 1
 -start_lam_it 0
 -det True
 -saveto examples/results/CIFAR10/rmsprop_con/

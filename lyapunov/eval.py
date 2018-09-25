@@ -135,7 +135,7 @@ def eval(filepath):
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
     colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
-    embed()
+
     if d_rng is not None: plt.plot(X_ipca[d_rng,0], X_ipca[d_rng, 1], '-', color='dodgerblue', lw=0.5)
     if g_rng is not None: plt.plot(X_ipca[g_rng,0], X_ipca[g_rng, 1], 'r-', lw=0.5)
     if both_rng is not None: plt.plot(X_ipca[both_rng,0], X_ipca[both_rng, 1], '-', color='lime', lw=0.5)

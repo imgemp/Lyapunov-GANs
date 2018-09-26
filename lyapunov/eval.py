@@ -46,6 +46,7 @@ def load_args(filepath):
     params['viz_every'] = int(temp['viz_every'][0])
     params['x_dim'] = int(temp['x_dim'][0])
     params['domain'] = temp['domain'][0]
+    params['batch_size'] = int(temp['batch_size'][0])
 
     if params['domain'] == 'MO8G':
         from examples.domains.synthetic import MOG_Circle as Domain
@@ -64,7 +65,7 @@ def load_args(filepath):
     else:
         raise NotImplementedError(params['domain'])
 
-    data = Domain(dim=params['x_dim'])
+    data = Domain(dim=params['x_dim'], batch_size=params['batch_size'])
 
     return data, params
 

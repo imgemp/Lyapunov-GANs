@@ -21,17 +21,29 @@ import seaborn as sns
 
 
 class MNIST(Data):
-    def __init__(self, replace=True, **kwargs):
+    def __init__(self, replace=True, batch_size=64, **kwargs):
         super(MNIST, self).__init__()
-        self.data = self.load()
+        self.data = self.load(batch_size)
         self.dataiter = iter(self.data)
+        self.batch_size = batch_size
+        self.warned = False
 
     def sample(self, batch_size):
-        try:
-            return self.dataiter.next()[0].view(batch_size,-1)
-        except:
-            self.dataiter = iter(self.data)
-            return self.dataiter.next()[0].view(batch_size,-1)
+        q, r = divmod(batch_size, self.batch_size)
+        if not self.warned:
+            print('WARNING: Only positive integer multiples of {} allowed'.format(self.batch_size))
+        n_batches = max(1, q)
+        batches = []
+        for b in range(n_batches):
+            try:
+                batches += [self.dataiter.next()[0].view(batch_size,-1)]
+            except:
+                self.dataiter = iter(self.data)
+                batches += [self.dataiter.next()[0].view(batch_size,-1)]
+        if n_batches > 1:
+            return torch.cat(batches, dim=0)
+        else:
+            return batches[0]
 
     def plot_current(self, train, params, i):
         images = train.m.get_fake(64, params['z_dim']).view(-1, 1, 28, 28)
@@ -52,20 +64,20 @@ class MNIST(Data):
             else:
                 plt.subplot(1,cols,i+1, sharex=ax, sharey=ax)
             thissamp = samps.reshape((params['n_viz'],1,28,28)).transpose((0,2,3,1))
-            ax2 = plt.imshow(thissamp.reshape(-1, 28, 1))
+            ax2 = plt.imshow(thissamp.reshape(-1,28), cmap=plt.get_cmap('binary'))
             plt.xticks([]); plt.yticks([])
             plt.title('step %d'%(i*params['viz_every']))
         plt.gcf().tight_layout()
         fig.savefig(params['saveto']+'series.pdf')
         plt.close()
 
-    def load(self, path='examples/domains/mnist2'):
+    def load(self, path='examples/domains/mnist2', batch_size=64):
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
         trainset = torchvision.datasets.MNIST(root='./examples/domains/mnist2', train=True,
                                               download=True, transform=transform)
-        trainloader = torch.utils.data.DataLoader(trainset, batch_size=64,
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                                   shuffle=True, num_workers=2)
 
         return trainloader

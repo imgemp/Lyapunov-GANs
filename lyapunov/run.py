@@ -166,7 +166,7 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
     to_gpu = gpu_helper(params['gpu'])
     to_gpu_alt = gpu_helper(params['gpu_alt'])
 
-    data = Domain(dim=params['x_dim'])
+    data = Domain(dim=params['x_dim'], batch_size=params['batch_size'])
     G = Generator(input_dim=params['z_dim'],output_dim=params['x_dim'],n_hidden=params['gen_n_hidden'],
                   n_layer=params['gen_n_layer'],nonlin=params['gen_nonlinearity'])
     D = Discriminator(input_dim=params['x_dim'],n_hidden=params['disc_n_hidden'],n_layer=params['disc_n_layer'],

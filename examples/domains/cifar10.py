@@ -21,17 +21,29 @@ import seaborn as sns
 
 
 class CIFAR10(Data):
-    def __init__(self, replace=True, **kwargs):
+    def __init__(self, replace=True, batch_size=64, **kwargs):
         super(CIFAR10, self).__init__()
-        self.data = self.load()
+        self.data = self.load(batch_size)
         self.dataiter = iter(self.data)
+        self.batch_size = batch_size
+        self.warned = False
 
     def sample(self, batch_size):
-        try:
-            return self.dataiter.next()[0].view(batch_size,-1)
-        except:
-            self.dataiter = iter(self.data)
-            return self.dataiter.next()[0].view(batch_size,-1)
+        q, r = divmod(batch_size, self.batch_size)
+        if not self.warned:
+            print('WARNING: Only positive integer multiples of {} allowed'.format(self.batch_size))
+        n_batches = max(1, q)
+        batches = []
+        for b in range(n_batches):
+            try:
+                batches += [self.dataiter.next()[0].view(batch_size,-1)]
+            except:
+                self.dataiter = iter(self.data)
+                batches += [self.dataiter.next()[0].view(batch_size,-1)]
+        if n_batches > 1:
+            return torch.cat(batches, dim=0)
+        else:
+            return batches[0]
 
     def plot_current(self, train, params, i):
         # images = train.m.get_fake(64, params['z_dim']).view(3, 32, 32).cpu().data.numpy()
@@ -65,13 +77,13 @@ class CIFAR10(Data):
         fig.savefig(params['saveto']+'series.pdf')
         plt.close()
 
-    def load(self, path='examples/domains/cifar10'):
+    def load(self, path='examples/domains/cifar10', batch_size=64):
         transform = transforms.Compose([transforms.ToTensor(),
                                         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
         trainset = torchvision.datasets.CIFAR10(root='./examples/domains/cifar10', train=True,
                                                 download=True, transform=transform)
-        trainloader = torch.utils.data.DataLoader(trainset, batch_size=64,
+        trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size,
                                                   shuffle=True, num_workers=2)
 
         return trainloader

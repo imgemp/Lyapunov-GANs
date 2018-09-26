@@ -30,8 +30,9 @@ class CIFAR10(Data):
 
     def sample(self, batch_size):
         q, r = divmod(batch_size, self.batch_size)
-        if not self.warned:
+        if (q <= 1 or r != 0) and not self.warned:
             print('WARNING: Only positive integer multiples of {} allowed'.format(self.batch_size))
+            self.warned = True
         n_batches = max(1, q)
         batches = []
         for b in range(n_batches):

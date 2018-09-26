@@ -127,6 +127,9 @@ def parse_params():
     from lyapunov.train_ops.simgd import SimGD
     args['maps'] += [SimGD]
 
+    if args['gpu_alt'] == -2:
+        args['gpu_alt'] = args['gpu']
+
     if args['saveto'] == '':
         args['saveto'] = 'examples/results/' + args['domain'] + '/' + '-'.join(args['map_strings']) + '/' + args['description']
 

@@ -19,7 +19,7 @@ from lyapunov.core import Data, GNet, DNet
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-
+from IPython import embed
 class MNIST(Data):
     def __init__(self, replace=True, batch_size=64, **kwargs):
         super(MNIST, self).__init__()
@@ -30,8 +30,10 @@ class MNIST(Data):
 
     def sample(self, batch_size):
         q, r = divmod(batch_size, self.batch_size)
-        if (q <= 1 or r != 0) and not self.warned:
+        if (q < 1 or r != 0) and not self.warned:
             print('WARNING: Only positive integer multiples of {} allowed'.format(self.batch_size))
+            embed()
+            assert False
             self.warned = True
         n_batches = max(1, q)
         batches = []

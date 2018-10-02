@@ -21,11 +21,12 @@ from IPython import embed
 def parse_params():
     parser = argparse.ArgumentParser(description='GANs in PyTorch')
     parser.add_argument('-saveto','--saveto', type=str, default='', help='path prefix for saving results', required=False)
+    parser.add_argument('-max_iter','--max_iter', type=int, default=-1, help='overwrite max_iter', required=False)
     args = vars(parser.parse_args())
-    return args['saveto']
+    return args['saveto'], args['max_iter']
 
 
-def load_args(filepath):
+def load_args(filepath, max_iter):
     params = {}
     with open(filepath+'args.txt', 'r') as f:
         keys, vals = [], []
@@ -40,7 +41,10 @@ def load_args(filepath):
     params['start_lam_it'] = int(temp['start_lam_it'][0])
     params['freeze_d_its'] = [int(it.strip(',').strip('[').strip(']')) for it in temp['freeze_d_its']]
     params['freeze_g_its'] = [int(it.strip(',').strip('[').strip(']')) for it in temp['freeze_g_its']]
-    params['max_iter'] = int(temp['max_iter'][0])
+    if max_iter > -1:
+        params['max_iter'] = max_iter
+    else:
+        params['max_iter'] = int(temp['max_iter'][0])
     params['weights_every'] = int(temp['weights_every'][0])
     params['n_viz'] = int(temp['n_viz'][0])
     params['viz_every'] = int(temp['viz_every'][0])
@@ -71,11 +75,11 @@ def load_args(filepath):
 
 
 def post_eval(data, params):
-    ds = np.loadtxt(params['saveto']+'d_norm.out')
-    gs = np.loadtxt(params['saveto']+'g_norm.out')
-    fs = np.loadtxt(params['saveto']+'loss.out')
-    les = np.loadtxt(params['saveto']+'les.out')
-    pws = np.loadtxt(params['saveto']+'pws.out')
+    # ds = np.loadtxt(params['saveto']+'d_norm.out')
+    # gs = np.loadtxt(params['saveto']+'g_norm.out')
+    # fs = np.loadtxt(params['saveto']+'loss.out')
+    # les = np.loadtxt(params['saveto']+'les.out')
+    # pws = np.loadtxt(params['saveto']+'pws.out')
 
     d_rng = intersection(params['freeze_d_its'], (params['start_lam_it'],params['max_iter']-1))
     g_rng = intersection(params['freeze_g_its'], (params['start_lam_it'],params['max_iter']-1))
@@ -85,39 +89,51 @@ def post_eval(data, params):
         both_rng = None
 
     print('Plotting gradient norms...')
-    fig = plt.figure()
-    ax = plt.subplot(111)
-    plt.plot(range(len(ds)), ds, 'k-')
-    if d_rng is not None: plt.plot(d_rng, ds[d_rng], '-', color='dodgerblue')
-    if g_rng is not None: plt.plot(g_rng, ds[g_rng], 'r-')
-    if both_rng is not None: plt.plot(both_rng, ds[both_rng], '-', color='lime')
-    ax.set_ylabel('Discriminator Gradient L2 Norm')
-    ax.set_xlabel('Iteration')
-    plt.title('final loss='+str(ds[-1]))
-    fig.savefig(params['saveto']+'d_norm.pdf')
+    try:
+        ds = np.loadtxt(params['saveto']+'d_norm.out')
+        fig = plt.figure()
+        ax = plt.subplot(111)
+        plt.plot(range(len(ds)), ds, 'k-')
+        if d_rng is not None: plt.plot(d_rng, ds[d_rng], '-', color='dodgerblue')
+        if g_rng is not None: plt.plot(g_rng, ds[g_rng], 'r-')
+        if both_rng is not None: plt.plot(both_rng, ds[both_rng], '-', color='lime')
+        ax.set_ylabel('Discriminator Gradient L2 Norm')
+        ax.set_xlabel('Iteration')
+        plt.title('final loss='+str(ds[-1]))
+        fig.savefig(params['saveto']+'d_norm.pdf')
+    except:
+        print('d_norm.out not found.')
 
-    fig = plt.figure()
-    ax = plt.subplot(111)
-    plt.plot(range(len(gs)), gs, 'k-')
-    if d_rng is not None: plt.plot(d_rng, gs[d_rng], '-', color='dodgerblue')
-    if g_rng is not None: plt.plot(g_rng, gs[g_rng], 'r-')
-    if both_rng is not None: plt.plot(both_rng, gs[both_rng], '-', color='lime')
-    ax.set_ylabel('Generator Gradient L2 Norm')
-    ax.set_xlabel('Iteration')
-    plt.title('final loss='+str(gs[-1]))
-    fig.savefig(params['saveto']+'g_norm.pdf')
+    try:
+        gs = np.loadtxt(params['saveto']+'g_norm.out')
+        fig = plt.figure()
+        ax = plt.subplot(111)
+        plt.plot(range(len(gs)), gs, 'k-')
+        if d_rng is not None: plt.plot(d_rng, gs[d_rng], '-', color='dodgerblue')
+        if g_rng is not None: plt.plot(g_rng, gs[g_rng], 'r-')
+        if both_rng is not None: plt.plot(both_rng, gs[both_rng], '-', color='lime')
+        ax.set_ylabel('Generator Gradient L2 Norm')
+        ax.set_xlabel('Iteration')
+        plt.title('final loss='+str(gs[-1]))
+        fig.savefig(params['saveto']+'g_norm.pdf')
+    except:
+        print('g_norm.out not found.')
 
     print('Plotting loss...')
-    fig = plt.figure()
-    ax = plt.subplot(111)
-    plt.plot(range(len(fs)),np.array(fs), 'k-')
-    if d_rng is not None: plt.plot(d_rng, fs[d_rng], '-', color='dodgerblue')
-    if g_rng is not None: plt.plot(g_rng, fs[g_rng], 'r-')
-    if both_rng is not None: plt.plot(both_rng, fs[both_rng], '-', color='lime')
-    ax.set_ylabel('Loss')
-    ax.set_xlabel('Iteration')
-    plt.title('final loss='+str(fs[-1]))
-    fig.savefig(params['saveto']+'loss.pdf')
+    try:
+        fs = np.loadtxt(params['saveto']+'loss.out')
+        fig = plt.figure()
+        ax = plt.subplot(111)
+        plt.plot(range(len(fs)),np.array(fs), 'k-')
+        if d_rng is not None: plt.plot(d_rng, fs[d_rng], '-', color='dodgerblue')
+        if g_rng is not None: plt.plot(g_rng, fs[g_rng], 'r-')
+        if both_rng is not None: plt.plot(both_rng, fs[both_rng], '-', color='lime')
+        ax.set_ylabel('Loss')
+        ax.set_xlabel('Iteration')
+        plt.title('final loss='+str(fs[-1]))
+        fig.savefig(params['saveto']+'loss.pdf')
+    except:
+        print('loss.out not found.')
 
     print('Loading weights from saved files...')
     weights = []
@@ -179,7 +195,8 @@ def post_eval(data, params):
     plt.close(fig)
 
     print('Plotting distance of weights from mean over trajectory...')
-    w_mean_norms = np.linalg.norm(weights-weights.mean(axis=0), axis=1)
+    weights_mean = weights.mean(axis=0)
+    w_mean_norms = np.linalg.norm(weights-weights_mean, axis=1)
     fig = plt.figure()
     plt.plot(range(len(w_mean_norms)), w_mean_norms, 'k-')
     if d_rng is not None: plt.plot(d_rng, w_mean_norms[d_rng], '-', color='dodgerblue')
@@ -187,6 +204,18 @@ def post_eval(data, params):
     if both_rng is not None: plt.plot(both_rng, w_mean_norms[both_rng], '-', color='lime')
     plt.title('p2p='+str(np.ptp(w_mean_norms)))
     fig.savefig(params['saveto']+'weight_mean_norms.pdf')
+    plt.close(fig)
+
+    print('Plotting angular distance of weights from mean over trajectory...')
+    w_mean_angles = 180/np.pi*np.arccos(np.sum(weights*weights_mean, axis=1)/w_norms/np.linalg.norm(weights_mean))
+    fig = plt.figure()
+    plt.plot(range(len(w_mean_angles)), w_mean_angles, 'k-')
+    if d_rng is not None: plt.plot(d_rng, w_mean_angles[d_rng], '-', color='dodgerblue')
+    if g_rng is not None: plt.plot(g_rng, w_mean_angles[g_rng], 'r-')
+    if both_rng is not None: plt.plot(both_rng, w_mean_angles[both_rng], '-', color='lime')
+    plt.title('p2p='+str(np.ptp(w_mean_angles)))
+    plt.ylabel('Angles in degrees')
+    fig.savefig(params['saveto']+'weight_mean_angles.pdf')
     plt.close(fig)
 
     print('Plotting distance of weights from closest vector over trajectory...')
@@ -213,5 +242,5 @@ def post_eval(data, params):
 
 
 if __name__ == '__main__':
-    saveto = parse_params()
-    post_eval(*load_args(saveto))
+    saveto, max_iter = parse_params()
+    post_eval(*load_args(saveto, max_iter))

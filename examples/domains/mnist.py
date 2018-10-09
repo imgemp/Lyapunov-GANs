@@ -107,8 +107,12 @@ class Generator(GNet):
         output = self.sigmoid(output)
         return output.view(-1, self.output_dim)
 
-    def init_weights(self):
-        return None
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            pass
 
 
 class Discriminator(DNet):
@@ -137,5 +141,9 @@ class Discriminator(DNet):
         out = self.output(out)
         return out.view(-1)
 
-    def init_weights(self):
-        return None
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            pass

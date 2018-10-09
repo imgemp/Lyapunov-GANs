@@ -22,11 +22,12 @@ def parse_params():
     parser = argparse.ArgumentParser(description='GANs in PyTorch')
     parser.add_argument('-saveto','--saveto', type=str, default='', help='path prefix for saving results', required=False)
     parser.add_argument('-max_iter','--max_iter', type=int, default=-1, help='overwrite max_iter', required=False)
+    parser.add_argument('-replt_rt','--replt_rt', type=lambda x: (str(x).lower() == 'true'), default=False, help='whether to replot the lyapunov exponents and pca trajectories (runtime plots)', required=False)
     args = vars(parser.parse_args())
-    return args['saveto'], args['max_iter']
+    return args['saveto'], args['max_iter'], args['replt_rt']
 
 
-def load_args(filepath, max_iter):
+def load_args(filepath, max_iter, replt_rt=False):
     params = {}
     with open(filepath+'args.txt', 'r') as f:
         keys, vals = [], []
@@ -71,15 +72,30 @@ def load_args(filepath, max_iter):
 
     data = Domain(dim=params['x_dim'], batch_size=params['batch_size'])
 
-    return data, params
+    return data, params, replt_rt
 
 
-def post_eval(data, params):
-    # ds = np.loadtxt(params['saveto']+'d_norm.out')
-    # gs = np.loadtxt(params['saveto']+'g_norm.out')
-    # fs = np.loadtxt(params['saveto']+'loss.out')
-    # les = np.loadtxt(params['saveto']+'les.out')
-    # pws = np.loadtxt(params['saveto']+'pws.out')
+def post_eval(data, params, replot_runtimeplots=False):
+    if replot_runtimeplots:
+        les = np.loadtxt(params['saveto']+'les.out')
+        pws = np.loadtxt(params['saveto']+'pws.out')
+
+        fig = plt.figure()
+        plt.plot(np.vstack(les))
+        mn, mx = np.min(les), np.max(les)
+        plt.plot([params['freeze_d_its'][0]-params['start_lam_it']]*2,[mn,mx], '--', color='dodgerblue')
+        plt.plot([params['freeze_d_its'][1]-params['start_lam_it']]*2,[mn,mx], '--', color='dodgerblue')
+        plt.plot([params['freeze_g_its'][0]-params['start_lam_it']]*2,[mn,mx], '--', color='r')
+        plt.plot([params['freeze_g_its'][1]-params['start_lam_it']]*2,[mn,mx], '--', color='r')
+        plt.title('LE range = ({:.2g},{:.2g})'.format(np.min(les[-1]),np.max(les[-1])))
+        fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
+        plt.close(fig)
+
+        fig = plt.figure()
+        z = np.linspace(0, 1, len(pws))
+        colorline(*np.split(np.vstack(pws),2,axis=1), z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
+        fig.savefig(params['saveto']+'projected_traj.pdf') 
+        plt.close(fig)
 
     d_rng = intersection(params['freeze_d_its'], (params['start_lam_it'],params['max_iter']-1))
     g_rng = intersection(params['freeze_g_its'], (params['start_lam_it'],params['max_iter']-1))
@@ -242,5 +258,5 @@ def post_eval(data, params):
 
 
 if __name__ == '__main__':
-    saveto, max_iter = parse_params()
-    post_eval(*load_args(saveto, max_iter))
+    saveto, max_iter, replt_rt = parse_params()
+    post_eval(*load_args(saveto, max_iter, replt_rt))

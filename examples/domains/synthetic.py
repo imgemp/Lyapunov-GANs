@@ -178,11 +178,15 @@ class Generator(GNet):
             h = self.nonlin(hfc(h))
         return self.final_fc(h)
 
-    def init_weights(self):
-        for layer in self.layers:
-            nn.init.orthogonal_(layer.weight.data, gain=0.8)
-            # layer.weight.data.normal_(0.0, 0.02)
-            layer.bias.data.zero_()
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            for layer in self.layers:
+                nn.init.orthogonal_(layer.weight.data, gain=0.8)
+                # layer.weight.data.normal_(0.0, 0.02)
+                layer.bias.data.zero_()
 
 
 class Discriminator(DNet):
@@ -222,10 +226,14 @@ class Discriminator(DNet):
         else:
             return self.final_fc(h)
 
-    def init_weights(self):
-        for layer in self.layers:
-            nn.init.orthogonal_(layer.weight.data, gain=0.8)
-            layer.bias.data.zero_()
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            for layer in self.layers:
+                nn.init.orthogonal_(layer.weight.data, gain=0.8)
+                layer.bias.data.zero_()
 
 
 class Generator_C(GNet):
@@ -239,8 +247,12 @@ class Generator_C(GNet):
     def forward(self,x):
         return self.b*torch.ones_like(x)
 
-    def init_weights(self):
-        pass
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            pass
 
 
 class Discriminator_L(DNet):
@@ -253,8 +265,12 @@ class Discriminator_L(DNet):
     def forward(self,x):
         return torch.matmul(x, self.w1)
 
-    def init_weights(self):
-        pass
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            pass
 
 
 class Generator_L(GNet):
@@ -268,9 +284,13 @@ class Generator_L(GNet):
     def forward(self,x):
         return self.linear(x)
 
-    def init_weights(self):
-        nn.init.orthogonal_(self.linear.weight.data, gain=0.8)
-        self.linear.bias.data = torch.from_numpy(-1+2*np.random.rand(self.output_dim).astype('float32'))
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            nn.init.orthogonal_(self.linear.weight.data, gain=0.8)
+            self.linear.bias.data = torch.from_numpy(-1+2*np.random.rand(self.output_dim).astype('float32'))
 
 
 class Discriminator_Q(DNet):
@@ -282,6 +302,10 @@ class Discriminator_Q(DNet):
     def forward(self,x):
         return torch.sum(x*self.linear(x),dim=1)
 
-    def init_weights(self):
-        nn.init.orthogonal_(self.linear.weight.data, gain=0.8)
-        self.linear.bias.data.zero_()
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            nn.init.orthogonal_(self.linear.weight.data, gain=0.8)
+            self.linear.bias.data.zero_()

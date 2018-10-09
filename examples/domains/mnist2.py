@@ -117,13 +117,17 @@ class Generator(GNet):
         output = self.tanh(output)
         return output.view(-1, self.output_dim**2)
 
-    def init_weights(self):
-        nn.init.xavier_uniform_(self.preprocess.weight.data, gain=1)
-        self.preprocess.bias.data.zero_()
-        for layer in self.deconv:
-            if hasattr(layer,'weight'):
-                nn.init.xavier_uniform_(layer.weight.data, gain=1)
-                layer.bias.data.zero_()
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            nn.init.xavier_uniform_(self.preprocess.weight.data, gain=1)
+            self.preprocess.bias.data.zero_()
+            for layer in self.deconv:
+                if hasattr(layer,'weight'):
+                    nn.init.xavier_uniform_(layer.weight.data, gain=1)
+                    layer.bias.data.zero_()
 
 
 class Discriminator(DNet):
@@ -157,10 +161,14 @@ class Discriminator(DNet):
         out = self.output(out)
         return out.view(-1)
 
-    def init_weights(self):
-        for layer in self.main:
-            if hasattr(layer,'weight'):
-                nn.init.xavier_uniform_(layer.weight.data, gain=1)
-                layer.bias.data.zero_()
-        nn.init.xavier_uniform_(self.output.weight.data, gain=1)
-        self.output.bias.data.zero_()
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            for layer in self.main:
+                if hasattr(layer,'weight'):
+                    nn.init.xavier_uniform_(layer.weight.data, gain=1)
+                    layer.bias.data.zero_()
+            nn.init.xavier_uniform_(self.output.weight.data, gain=1)
+            self.output.bias.data.zero_()

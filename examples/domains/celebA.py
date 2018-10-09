@@ -132,16 +132,20 @@ class Generator(GNet):
         output = self.tanh(output)
         return output.view(-1, 3*self.output_dim**2)
 
-    def init_weights(self):
-        nn.init.xavier_uniform_(self.preprocess.weight.data, gain=1)
-        self.preprocess.bias.data.zero_()
-        for layer in [self.convt_1,self.conv_1a,self.conv_1b,
-                      self.convt_2,self.conv_2a,self.conv_2b,
-                      self.convt_3,self.conv_3a,self.conv_3b,
-                      self.convt_4]:
-            if hasattr(layer,'weight'):
-                nn.init.xavier_uniform_(layer.weight.data, gain=1)
-                layer.bias.data.zero_()
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            nn.init.xavier_uniform_(self.preprocess.weight.data, gain=1)
+            self.preprocess.bias.data.zero_()
+            for layer in [self.convt_1,self.conv_1a,self.conv_1b,
+                          self.convt_2,self.conv_2a,self.conv_2b,
+                          self.convt_3,self.conv_3a,self.conv_3b,
+                          self.convt_4]:
+                if hasattr(layer,'weight'):
+                    nn.init.xavier_uniform_(layer.weight.data, gain=1)
+                    layer.bias.data.zero_()
 
 
 class Discriminator(DNet):
@@ -211,13 +215,17 @@ class Discriminator(DNet):
         out = self.output(out)
         return out.view(-1)
 
-    def init_weights(self):
-        for layer in [self.conv_1a,self.conv_1b,self.conv_1c,
-                      self.conv_2a,self.conv_2b,self.conv_2c,
-                      self.conv_3a,self.conv_3b,self.conv_3c,
-                      self.conv_4a,self.conv_4b,self.conv_4c]:
-            if hasattr(layer,'weight'):
-                nn.init.xavier_uniform_(layer.weight.data, gain=1)
-                layer.bias.data.zero_()
-        nn.init.xavier_uniform_(self.output.weight.data, gain=1)
-        self.output.bias.data.zero_()
+    def init_weights(self, filepath=''):
+        try:
+            assert filepath != ''
+            self.init_weights_from_file(filepath)
+        except:
+            for layer in [self.conv_1a,self.conv_1b,self.conv_1c,
+                          self.conv_2a,self.conv_2b,self.conv_2c,
+                          self.conv_3a,self.conv_3b,self.conv_3c,
+                          self.conv_4a,self.conv_4b,self.conv_4c]:
+                if hasattr(layer,'weight'):
+                    nn.init.xavier_uniform_(layer.weight.data, gain=1)
+                    layer.bias.data.zero_()
+            nn.init.xavier_uniform_(self.output.weight.data, gain=1)
+            self.output.bias.data.zero_()

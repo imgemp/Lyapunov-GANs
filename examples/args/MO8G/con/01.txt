@@ -1,6 +1,6 @@
 -dom MO8G
 -bs 512
--div Wasserstein
+-div JS
 -d_lr 1e-3
 -d_nh 16
 -d_nl 4

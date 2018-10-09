@@ -1,4 +1,5 @@
 import functools
+import pickle
 
 import numpy as np
 
@@ -46,6 +47,12 @@ class GNet(nn.Module):
     def init_weights(self):
         return None
 
+    def init_weights_from_file(self, filepath):
+        weights = pickle.load(open(filepath, 'rb'))
+        for p,w in zip(self.parameters(), weights):
+            p.data = torch.from_numpy(w)
+        print('NOTE: Loaded generator weights from pickle file.')
+
     def get_param_data(self):
         return [p.data.detach() for p in self.parameters()]
 
@@ -88,9 +95,13 @@ class DNet(nn.Module):
         return None
 
     def init_weights(self):
-        for layer in self.layers:
-            nn.init.orthogonal(layer.weight.data, gain=0.8)
-            layer.bias.data.zero_()
+        return None
+
+    def init_weights_from_file(self, filepath):
+        weights = pickle.load(open(filepath, 'rb'))
+        for p,w in zip(self.parameters(), weights):
+            p.data = torch.from_numpy(w)
+        print('NOTE: Loaded discriminator weights from pickle file.')
 
     def get_param_data(self):
         return [p.data.detach() for p in self.parameters()]
@@ -197,8 +208,18 @@ class Train(object):
 
         if self.req_aux:
             # Initiate auxiliary parameters
-            self.aux_d = [torch.zeros_like(p, requires_grad=False) for p in self.m.D.parameters()]
-            self.aux_g = [torch.zeros_like(p, requires_grad=False) for p in self.m.G.parameters()]
+            try:
+                aux_d = pickle.load(open(self.m.params['disc_aux_weights']), 'rb')
+                self.aux_d = [torch.from_numpy(w, requires_grad=False) for w in aux_d]
+                print('NOTE: Loaded auxiliary discriminator weights from pickle file.')
+            except:
+                self.aux_d = [torch.zeros_like(p, requires_grad=False) for p in self.m.D.parameters()]
+            try:
+                aux_g = pickle.load(open(self.m.params['disc_aux_weights']), 'rb')
+                self.aux_g = [torch.from_numpy(w, requires_grad=False) for w in aux_g]
+                print('NOTE: Loaded auxiliary generator weights from pickle file.')
+            except:
+                self.aux_g = [torch.zeros_like(p, requires_grad=False) for p in self.m.G.parameters()]
         else:
             self.aux_d = None
             self.aux_g = None

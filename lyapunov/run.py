@@ -22,7 +22,7 @@ import sys
 sys.path.append('../')
 
 from lyapunov.core import Manager
-from lyapunov.eval import post_eval
+from lyapunov.eval import post_eval, plot_les, plot_traj
 from lyapunov.utils import gpu_helper, save_weights, colorline
 
 from tqdm import tqdm
@@ -135,7 +135,7 @@ def parse_params():
         args['gpu_alt'] = args['gpu']
 
     if args['saveto'] == '':
-        args['saveto'] = 'examples/results/' + args['domain'] + '/' + '-'.join(args['map_strings']) + '/' + args['description']
+        args['saveto'] = 'examples/results/' + args['domain'] + '/' + '-'.join(args['map_strings']) + '/'*(args['description']!='') + args['description']
 
     if args['description'] == '':
         args['description'] = args['domain'] + '-' + '-'.join(args['map_strings'])
@@ -224,22 +224,9 @@ def run_experiment(Train, Domain, Generator, Discriminator, params):
             data.plot_current(train, params, i)
 
             if i >= params['start_lam_it'] and params['K'] > 0:
-                fig = plt.figure()
-                plt.plot(np.vstack(les))
-                mn, mx = np.min(les), np.max(les)
-                plt.plot([params['freeze_d_its'][0]-params['start_lam_it']]*2,[mn,mx], '--', color='dodgerblue')
-                plt.plot([params['freeze_d_its'][1]-params['start_lam_it']]*2,[mn,mx], '--', color='dodgerblue')
-                plt.plot([params['freeze_g_its'][0]-params['start_lam_it']]*2,[mn,mx], '--', color='r')
-                plt.plot([params['freeze_g_its'][1]-params['start_lam_it']]*2,[mn,mx], '--', color='r')
-                plt.title('LE range = ({:.2f},{:.2f})'.format(np.min(les[-1]),np.max(les[-1])))
-                fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
-                plt.close(fig)
+                plot_les(les, params)
             if i >= params['start_lam_it']+1 and params['K'] > 0:
-                fig = plt.figure()
-                z = np.linspace(0, 1, len(pws))
-                colorline(*np.split(np.vstack(pws),2,axis=1), z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
-                fig.savefig(params['saveto']+'projected_traj.pdf') 
-                plt.close(fig)
+                plot_traj(les, params)
 
         if params['weights_every'] > 0 and i % params['weights_every'] == 0:
             save_weights(m.D,params['saveto']+'weights/D_'+str(i)+'.pkl')

@@ -74,28 +74,53 @@ def load_args(filepath, max_iter, replt_rt=False):
 
     return data, params, replt_rt
 
-
-def post_eval(data, params, replot_runtimeplots=False):
-    if replot_runtimeplots:
-        les = np.loadtxt(params['saveto']+'les.out')
-        pws = np.loadtxt(params['saveto']+'pws.out')
-
-        fig = plt.figure()
-        plt.plot(np.vstack(les))
-        mn, mx = np.min(les), np.max(les)
+def plot_les(les, params, fontsize=18):
+    fig = plt.figure()
+    plt.plot(np.vstack(les))
+    mn, mx = np.min(les), np.max(les)
+    if params['freeze_d_its'][0] != params['freeze_d_its'][1]:
         plt.plot([params['freeze_d_its'][0]-params['start_lam_it']]*2,[mn,mx], '--', color='dodgerblue')
         plt.plot([params['freeze_d_its'][1]-params['start_lam_it']]*2,[mn,mx], '--', color='dodgerblue')
+    if params['freeze_g_its'][0] != params['freeze_g_its'][1]:
         plt.plot([params['freeze_g_its'][0]-params['start_lam_it']]*2,[mn,mx], '--', color='r')
         plt.plot([params['freeze_g_its'][1]-params['start_lam_it']]*2,[mn,mx], '--', color='r')
-        plt.title('LE range = ({:.2g},{:.2g})'.format(np.min(les[-1]),np.max(les[-1])))
-        fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
-        plt.close(fig)
+    le_strs = ['{num:.3{c}}'.format(num=le, c='e' if (abs(le) < 1e-3 or abs(le) > 1e3) else 'f') for le in [np.min(les[-1]),np.max(les[-1])]]
+    plt.title('LE range = ({},{})'.format(*le_strs), fontsize=fontsize)
+    plt.xlabel('Iteration', fontsize=fontsize)
+    plt.ylabel(r'Top-2 Lyapunov Exponents ($\Lambda_{1,2}$)', fontsize=fontsize)
+    plt.tick_params(axis='both', which='major', labelsize=fontsize)
+    plt.tight_layout()
+    fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
+    plt.close(fig)
 
-        fig = plt.figure()
-        z = np.linspace(0, 1, len(pws))
-        colorline(*np.split(np.vstack(pws),2,axis=1), z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
-        fig.savefig(params['saveto']+'projected_traj.pdf') 
-        plt.close(fig)
+def plot_traj(pws, params, fontsize=18):
+    fig, ax = plt.subplots(1)
+    z = np.linspace(0, 1, len(pws))
+    colorline(*np.split(np.vstack(pws),2,axis=1), z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
+    plt.title(r'Weights Trajectory Projected onto $\psi$', fontsize=fontsize)
+    plt.tick_params(axis='both', which='both', bottom=False, top=False, left=False, right=False)
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+    plt.tight_layout()
+    fig.savefig(params['saveto']+'projected_traj.pdf')
+    plt.close(fig)
+
+def post_eval(data, params, replot_runtimeplots=False):
+    fontsize = 18
+
+    if replot_runtimeplots:
+        print('Plotting runtime plots...')
+        try:
+            les = np.loadtxt(params['saveto']+'les.out')
+            plot_les(les, params, fontsize)
+        except:
+            print('LE plotting failed.')
+
+        try:
+            pws = np.loadtxt(params['saveto']+'pws.out')
+            plot_traj(pws, params, fontsize)
+        except:
+            print('Projected trajectory plotting failed.')
 
     d_rng = intersection(params['freeze_d_its'], (params['start_lam_it'],params['max_iter']-1))
     g_rng = intersection(params['freeze_g_its'], (params['start_lam_it'],params['max_iter']-1))
@@ -113,9 +138,11 @@ def post_eval(data, params, replot_runtimeplots=False):
         if d_rng is not None: plt.plot(d_rng, ds[d_rng], '-', color='dodgerblue')
         if g_rng is not None: plt.plot(g_rng, ds[g_rng], 'r-')
         if both_rng is not None: plt.plot(both_rng, ds[both_rng], '-', color='lime')
-        ax.set_ylabel('Discriminator Gradient L2 Norm')
-        ax.set_xlabel('Iteration')
-        plt.title('final loss='+str(ds[-1]))
+        ax.set_ylabel('Discriminator Gradient L2 Norm', fontsize=fontsize)
+        ax.set_xlabel('Iteration', fontsize=fontsize)
+        plt.tick_params(axis='both', which='major', labelsize=fontsize)
+        plt.title('Final Norm: {:.3e}'.format(ds[-1]), fontsize=fontsize)
+        plt.tight_layout()
         fig.savefig(params['saveto']+'d_norm.pdf')
     except:
         print('d_norm.out not found.')
@@ -128,9 +155,11 @@ def post_eval(data, params, replot_runtimeplots=False):
         if d_rng is not None: plt.plot(d_rng, gs[d_rng], '-', color='dodgerblue')
         if g_rng is not None: plt.plot(g_rng, gs[g_rng], 'r-')
         if both_rng is not None: plt.plot(both_rng, gs[both_rng], '-', color='lime')
-        ax.set_ylabel('Generator Gradient L2 Norm')
-        ax.set_xlabel('Iteration')
-        plt.title('final loss='+str(gs[-1]))
+        ax.set_ylabel('Generator Gradient L2 Norm', fontsize=fontsize)
+        ax.set_xlabel('Iteration', fontsize=fontsize)
+        plt.tick_params(axis='both', which='major', labelsize=fontsize)
+        plt.title('Final Norm: {:.3e}'.format(gs[-1]), fontsize=fontsize)
+        plt.tight_layout()
         fig.savefig(params['saveto']+'g_norm.pdf')
     except:
         print('g_norm.out not found.')
@@ -144,9 +173,11 @@ def post_eval(data, params, replot_runtimeplots=False):
         if d_rng is not None: plt.plot(d_rng, fs[d_rng], '-', color='dodgerblue')
         if g_rng is not None: plt.plot(g_rng, fs[g_rng], 'r-')
         if both_rng is not None: plt.plot(both_rng, fs[both_rng], '-', color='lime')
-        ax.set_ylabel('Loss')
-        ax.set_xlabel('Iteration')
-        plt.title('final loss='+str(fs[-1]))
+        ax.set_ylabel('Minimax Loss', fontsize=fontsize)
+        ax.set_xlabel('Iteration', fontsize=fontsize)
+        plt.tick_params(axis='both', which='major', labelsize=fontsize)
+        plt.title('Final Loss: {:.3e}'.format(fs[-1]), fontsize=fontsize)
+        plt.tight_layout()
         fig.savefig(params['saveto']+'loss.pdf')
     except:
         print('loss.out not found.')
@@ -172,13 +203,16 @@ def post_eval(data, params, replot_runtimeplots=False):
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
     colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
-
     if d_rng is not None: plt.plot(X_ipca[d_rng,0], X_ipca[d_rng, 1], '-', color='dodgerblue', lw=0.5)
     if g_rng is not None: plt.plot(X_ipca[g_rng,0], X_ipca[g_rng, 1], 'r-', lw=0.5)
     if both_rng is not None: plt.plot(X_ipca[both_rng,0], X_ipca[both_rng, 1], '-', color='lime', lw=0.5)
     ax.set_xlim([X_ipca[:,0].min(), X_ipca[:,0].max()])
     ax.set_ylim([X_ipca[:,1].min(), X_ipca[:,1].max()])
-    plt.title('p2px='+str(np.ptp(x))+', p2py='+str(np.ptp(y)))
+    plt.title('Weights Trajectory Projected onto Top-2 PCs\n'+r'($p2p_x,p2p_y$)'+' = ({:.3f},{:.3f})'.format(np.ptp(x),np.ptp(y)), fontsize=fontsize)
+    plt.tick_params(axis='both', which='major', bottom=False, top=False, left=False, right=False)
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+    fig.tight_layout()
     fig.savefig(params['saveto']+'weights_pca.pdf')
     plt.close(fig)
 
@@ -195,7 +229,11 @@ def post_eval(data, params, replot_runtimeplots=False):
     if d_rng is not None: plt.plot(X_ipca2[d_rng,0], X_ipca2[d_rng, 1], '-', color='dodgerblue', lw=0.5)
     if g_rng is not None: plt.plot(X_ipca2[g_rng,0], X_ipca2[g_rng, 1], 'r-', lw=0.5)
     if both_rng is not None: plt.plot(X_ipca2[both_rng,0], X_ipca2[both_rng, 1], '-', color='lime', lw=0.5)
-    plt.title('p2px='+str(np.ptp(x2))+', p2py='+str(np.ptp(y2)))
+    plt.title('Normalized Weights Trajectory\nProjected onto Top-2 PCs\n'+r'($p2p_x,p2p_y$)'+' = ({:.3f},{:.3f})'.format(np.ptp(x2),np.ptp(y2)), fontsize=fontsize)
+    plt.tick_params(axis='both', which='major', bottom=False, top=False, left=False, right=False)
+    ax.set_yticklabels([])
+    ax.set_xticklabels([])
+    fig.tight_layout()
     fig.savefig(params['saveto']+'weights_pca2.pdf')
     plt.close(fig)
 
@@ -206,7 +244,11 @@ def post_eval(data, params, replot_runtimeplots=False):
     if d_rng is not None: plt.plot(d_rng, w_norms[d_rng], '-', color='dodgerblue')
     if g_rng is not None: plt.plot(g_rng, w_norms[g_rng], 'r-')
     if both_rng is not None: plt.plot(both_rng, w_norms[both_rng], '-', color='lime')
-    plt.title('p2p='+str(np.ptp(w_norms)))
+    plt.xlabel('Iteration', fontsize=fontsize)
+    plt.ylabel(r'Norm of Weights ($||w||$)', fontsize=fontsize)
+    plt.title('Norm of Weights Over Trajectory\n'+r'($p2p$'+'={:.3f})'.format(np.ptp(w_norms)), fontsize=fontsize)
+    plt.tick_params(axis='both', which='major', labelsize=fontsize)
+    plt.tight_layout()
     fig.savefig(params['saveto']+'weight_norms.pdf')
     plt.close(fig)
 
@@ -218,7 +260,11 @@ def post_eval(data, params, replot_runtimeplots=False):
     if d_rng is not None: plt.plot(d_rng, w_mean_norms[d_rng], '-', color='dodgerblue')
     if g_rng is not None: plt.plot(g_rng, w_mean_norms[g_rng], 'r-')
     if both_rng is not None: plt.plot(both_rng, w_mean_norms[both_rng], '-', color='lime')
-    plt.title('p2p='+str(np.ptp(w_mean_norms)))
+    plt.xlabel('Iteration', fontsize=fontsize)
+    plt.ylabel(r'Norm of Weights ($||w||$)', fontsize=fontsize)
+    plt.title('Norm of Weights Over Trajectory\n'+r'($p2p$'+'={:.3f})'.format(np.ptp(w_mean_norms)), fontsize=fontsize)
+    plt.tick_params(axis='both', which='major', labelsize=fontsize)
+    plt.tight_layout()
     fig.savefig(params['saveto']+'weight_mean_norms.pdf')
     plt.close(fig)
 
@@ -229,8 +275,11 @@ def post_eval(data, params, replot_runtimeplots=False):
     if d_rng is not None: plt.plot(d_rng, w_mean_angles[d_rng], '-', color='dodgerblue')
     if g_rng is not None: plt.plot(g_rng, w_mean_angles[g_rng], 'r-')
     if both_rng is not None: plt.plot(both_rng, w_mean_angles[both_rng], '-', color='lime')
-    plt.title('p2p='+str(np.ptp(w_mean_angles)))
-    plt.ylabel('Angles in degrees')
+    plt.title('Angular Deviation of Weights\nfrom Mean Over Trajectory\n'+r'($p2p$'+'={:.3f})'.format(np.ptp(w_mean_angles)), fontsize=fontsize)
+    plt.tick_params(axis='both', which='major', labelsize=fontsize)
+    plt.ylabel('Angles in degrees', fontsize=fontsize)
+    plt.xlabel('Iteration', fontsize=fontsize)
+    plt.tight_layout()
     fig.savefig(params['saveto']+'weight_mean_angles.pdf')
     plt.close(fig)
 
@@ -243,16 +292,20 @@ def post_eval(data, params, replot_runtimeplots=False):
     if d_rng is not None: plt.plot(d_rng, w_closest_norms[d_rng], '-', color='dodgerblue')
     if g_rng is not None: plt.plot(g_rng, w_closest_norms[g_rng], 'r-')
     if both_rng is not None: plt.plot(both_rng, w_closest_norms[both_rng], '-', color='lime')
-    plt.title('p2p='+str(np.ptp(w_closest_norms)))
+    plt.title('Norm of Weights Over Trajectory\n'+r'($p2p$'+'={:.3f})'.format(np.ptp(w_closest_norms)), fontsize=fontsize)
+    plt.tick_params(axis='both', which='major', labelsize=fontsize)
+    plt.xlabel('Iteration', fontsize=fontsize)
+    plt.ylabel(r'Norm of Weights ($||w||$)', fontsize=fontsize)
+    plt.tight_layout()
     fig.savefig(params['saveto']+'weight_closest_norms.pdf')
     plt.close(fig)
 
-    print('Plotting sample series over epochs...')
-    if params['n_viz'] > 0:
-        np_samples = []
-        for viz_i in range(0,params['max_iter'],params['viz_every']):
-            np_samples.append(np.load(params['saveto']+'samples/'+str(viz_i)+'.npy'))
-        data.plot_series(np_samples, params)
+    # print('Plotting sample series over epochs...')
+    # if params['n_viz'] > 0:
+    #     np_samples = []
+    #     for viz_i in range(0,params['max_iter'],params['viz_every']):
+    #         np_samples.append(np.load(params['saveto']+'samples/'+str(viz_i)+'.npy'))
+    #     data.plot_series(np_samples, params)
 
     print('Complete.')
 

@@ -3,8 +3,9 @@
 -div Wasserstein
 -d_lr 1e-3
 -g_lr 1e-3
--mx_it 10001
--viz_every 100
+-mx_it 100001
+-viz_every 1000
+-w_every 10000
 -zdim 1
 -xdim 1
 -gam 0.1
@@ -13,4 +14,4 @@
 -LE_freq 1
 -LE_batch_mult 2
 -det True
--saveto examples/results/LQGaussian/con/
+-saveto examples/results/LQGaussian/con

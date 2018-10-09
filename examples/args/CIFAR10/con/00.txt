@@ -14,4 +14,4 @@
 -LE_batch_mult 1
 -start_lam_it 0
 -det True
--saveto examples/results/CIFAR10/rmsprop_con/
+-saveto examples/results/CIFAR10/rmsprop_con

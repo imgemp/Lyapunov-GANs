@@ -19,4 +19,4 @@
 -LE_batch_mult 2
 -start_lam_it 0
 -det True
--saveto examples/results/MO8G/rmsprop/
+-saveto examples/results/MO8G/rmsprop

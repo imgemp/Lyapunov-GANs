@@ -19,4 +19,4 @@
 -LE_batch_mult 2
 -start_lam_it 0
 -det True
--saveto examples/results/M25G/rmsprop_con/
+-saveto examples/results/M25G/rmsprop_con

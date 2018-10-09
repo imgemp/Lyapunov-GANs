@@ -352,12 +352,11 @@ class Train(object):
             # 5g-j. Orthogonalize psis, compute norms, normalize psis, and update Lyapunov exponents
             if (it+1 - self.m.params['start_lam_it']) % self.m.params['LE_freq'] == 0:
 
-                # 5g. Compute norms of columns of Psi
+                # 5g. Reshape psis into matrix psis_sh (K x total num weights)
                 psis = [self.psi_d, self.psi_g]
                 if self.req_aux:
                     psis += [self.psi_d_a, self.psi_g_a]
                 psis_sh = [functools.reduce(lambda x,y: x+y, ps) for ps in zip(*psis)]  # psis is 4 parameter dims x K x num weights
-                # this turns it into K x total num weights
 
                 # 5h. Gram Schmidt
                 psi_orth, psi_norms = self.GramSchmidt(psis_sh)

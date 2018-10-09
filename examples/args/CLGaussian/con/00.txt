@@ -13,4 +13,4 @@
 -LE_freq 1
 -LE_batch_mult 2
 -det True
--saveto examples/results/CLGaussian/con/
+-saveto examples/results/CLGaussian/con

@@ -1,10 +1,10 @@
 -dom CLGaussian
 -bs 512
 -div Wasserstein
--d_lr 1e-3
--g_lr 1e-3
--mx_it 2001
--viz_every 5000
+-d_lr 1e-2
+-g_lr 1e-2
+-mx_it 5001
+-viz_every 1000
 -zdim 1
 -xdim 1
 -gam 1.
@@ -12,4 +12,4 @@
 -LE_freq 1
 -LE_batch_mult 2
 -det True
--saveto examples/results/CLGaussian/simgd/
+-saveto examples/results/CLGaussian/simgd

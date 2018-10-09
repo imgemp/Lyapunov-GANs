@@ -124,6 +124,9 @@ def parse_params():
         elif mp.lower() == 'rmsprop':
             from lyapunov.train_ops.rmsprop import RMSProp
             args['maps'] += [RMSProp]
+        elif mp.lower() == 'rescale':
+            from lyapunov.train_ops.rescale import Rescale
+            args['maps'] += [Rescale]
         elif mp.lower() == 'simgd':
             pass
         else:

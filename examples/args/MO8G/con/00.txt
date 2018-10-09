@@ -2,10 +2,12 @@
 -bs 512
 -div Wasserstein
 -d_lr 1e-3
+-d_l2 1e-4
 -d_nh 16
 -d_nl 4
 -d_nonlin leaky_relu
 -g_lr 1e-3
+-g_l2 1e-4
 -g_nh 16
 -g_nl 4
 -g_nonlin leaky_relu

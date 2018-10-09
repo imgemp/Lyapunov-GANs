@@ -209,14 +209,14 @@ class Train(object):
         if self.req_aux:
             # Initiate auxiliary parameters
             try:
-                aux_d = pickle.load(open(self.m.params['disc_aux_weights']), 'rb')
-                self.aux_d = [torch.from_numpy(w, requires_grad=False) for w in aux_d]
+                aux_d = pickle.load(open(self.m.params['disc_aux_weights'], 'rb'))
+                self.aux_d = [torch.from_numpy(w) for w in aux_d]
                 print('NOTE: Loaded auxiliary discriminator weights from pickle file.')
             except:
                 self.aux_d = [torch.zeros_like(p, requires_grad=False) for p in self.m.D.parameters()]
             try:
-                aux_g = pickle.load(open(self.m.params['disc_aux_weights']), 'rb')
-                self.aux_g = [torch.from_numpy(w, requires_grad=False) for w in aux_g]
+                aux_g = pickle.load(open(self.m.params['disc_aux_weights'], 'rb'))
+                self.aux_g = [torch.from_numpy(w) for w in aux_g]
                 print('NOTE: Loaded auxiliary generator weights from pickle file.')
             except:
                 self.aux_g = [torch.zeros_like(p, requires_grad=False) for p in self.m.G.parameters()]

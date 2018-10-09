@@ -202,7 +202,7 @@ def post_eval(data, params, replot_runtimeplots=False):
     verts = path.interpolated(steps=1).vertices
     x, y = verts[:, 0], verts[:, 1]
     z = np.linspace(0, 1, len(x))
-    colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=0.2)
+    colorline(x, y, z, cmap=plt.get_cmap('Greys'), linewidth=1.0)
     if d_rng is not None: plt.plot(X_ipca[d_rng,0], X_ipca[d_rng, 1], '-', color='dodgerblue', lw=0.5)
     if g_rng is not None: plt.plot(X_ipca[g_rng,0], X_ipca[g_rng, 1], 'r-', lw=0.5)
     if both_rng is not None: plt.plot(X_ipca[both_rng,0], X_ipca[both_rng, 1], '-', color='lime', lw=0.5)
@@ -225,7 +225,7 @@ def post_eval(data, params, replot_runtimeplots=False):
     verts2 = path2.interpolated(steps=1).vertices
     x2, y2 = verts2[:, 0], verts2[:, 1]
     z2 = np.linspace(0, 1, len(x2))
-    colorline(x2, y2, z2, cmap=plt.get_cmap('Greys'), linewidth=0.2)
+    colorline(x2, y2, z2, cmap=plt.get_cmap('Greys'), linewidth=1.0)
     if d_rng is not None: plt.plot(X_ipca2[d_rng,0], X_ipca2[d_rng, 1], '-', color='dodgerblue', lw=0.5)
     if g_rng is not None: plt.plot(X_ipca2[g_rng,0], X_ipca2[g_rng, 1], 'r-', lw=0.5)
     if both_rng is not None: plt.plot(X_ipca2[both_rng,0], X_ipca2[both_rng, 1], '-', color='lime', lw=0.5)
@@ -300,12 +300,12 @@ def post_eval(data, params, replot_runtimeplots=False):
     fig.savefig(params['saveto']+'weight_closest_norms.pdf')
     plt.close(fig)
 
-    # print('Plotting sample series over epochs...')
-    # if params['n_viz'] > 0:
-    #     np_samples = []
-    #     for viz_i in range(0,params['max_iter'],params['viz_every']):
-    #         np_samples.append(np.load(params['saveto']+'samples/'+str(viz_i)+'.npy'))
-    #     data.plot_series(np_samples, params)
+    print('Plotting sample series over epochs...')
+    if params['n_viz'] > 0:
+        np_samples = []
+        for viz_i in range(0,params['max_iter'],params['viz_every']):
+            np_samples.append(np.load(params['saveto']+'samples/'+str(viz_i)+'.npy'))
+        data.plot_series(np_samples, params)
 
     print('Complete.')
 

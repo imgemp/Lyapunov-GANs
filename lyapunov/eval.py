@@ -89,8 +89,13 @@ def plot_les(les, params, fontsize=18):
     plt.xlabel('Iteration', fontsize=fontsize)
     plt.ylabel(r'Top-2 Lyapunov Exponents ($\Lambda_{1,2}$)', fontsize=fontsize)
     plt.tick_params(axis='both', which='major', labelsize=fontsize)
+    locs, _ = plt.xticks()
+    if locs[-1] >= 10000:
+        newlocs = [loc for loc in locs if loc >= 0 and loc < len(les)]
+        xlabels = [str(int(loc)//1000)+'k' for loc in newlocs]
+        plt.xticks(newlocs, xlabels)
     plt.tight_layout()
-    fig.savefig(params['saveto']+'lyapunov_exponents.pdf') 
+    fig.savefig(params['saveto']+'lyapunov_exponents.pdf')
     plt.close(fig)
 
 def plot_traj(pws, params, fontsize=18):
@@ -142,6 +147,11 @@ def post_eval(data, params, replot_runtimeplots=False):
         ax.set_xlabel('Iteration', fontsize=fontsize)
         plt.tick_params(axis='both', which='major', labelsize=fontsize)
         plt.title('Final Norm: {:.3e}'.format(ds[-1]), fontsize=fontsize)
+        locs, _ = plt.xticks()
+        if locs[-1] >= 10000:
+            newlocs = [loc for loc in locs if loc >= 0 and loc < len(ds)]
+            xlabels = [str(int(loc)//1000)+'k' for loc in newlocs]
+            plt.xticks(newlocs, xlabels)
         plt.tight_layout()
         fig.savefig(params['saveto']+'d_norm.pdf')
     except:
@@ -159,6 +169,11 @@ def post_eval(data, params, replot_runtimeplots=False):
         ax.set_xlabel('Iteration', fontsize=fontsize)
         plt.tick_params(axis='both', which='major', labelsize=fontsize)
         plt.title('Final Norm: {:.3e}'.format(gs[-1]), fontsize=fontsize)
+        locs, _ = plt.xticks()
+        if locs[-1] >= 10000:
+            newlocs = [loc for loc in locs if loc >= 0 and loc < len(gs)]
+            xlabels = [str(int(loc)//1000)+'k' for loc in newlocs]
+            plt.xticks(newlocs, xlabels)
         plt.tight_layout()
         fig.savefig(params['saveto']+'g_norm.pdf')
     except:
@@ -177,6 +192,11 @@ def post_eval(data, params, replot_runtimeplots=False):
         ax.set_xlabel('Iteration', fontsize=fontsize)
         plt.tick_params(axis='both', which='major', labelsize=fontsize)
         plt.title('Final Loss: {:.3e}'.format(fs[-1]), fontsize=fontsize)
+        locs, _ = plt.xticks()
+        if locs[-1] >= 10000:
+            newlocs = [loc for loc in locs if loc >= 0 and loc < len(fs)]
+            xlabels = [str(int(loc)//1000)+'k' for loc in newlocs]
+            plt.xticks(newlocs, xlabels)
         plt.tight_layout()
         fig.savefig(params['saveto']+'loss.pdf')
     except:
@@ -248,6 +268,11 @@ def post_eval(data, params, replot_runtimeplots=False):
     plt.ylabel(r'Norm of Weights ($||w||$)', fontsize=fontsize)
     plt.title('Norm of Weights Over Trajectory\n'+r'($p2p$'+'={:.3f})'.format(np.ptp(w_norms)), fontsize=fontsize)
     plt.tick_params(axis='both', which='major', labelsize=fontsize)
+    locs, _ = plt.xticks()
+    if locs[-1] >= 10000:
+        newlocs = [loc for loc in locs if loc >= 0 and loc < len(w_norms)]
+        xlabels = [str(int(loc)//1000)+'k' for loc in newlocs]
+        plt.xticks(newlocs, xlabels)
     plt.tight_layout()
     fig.savefig(params['saveto']+'weight_norms.pdf')
     plt.close(fig)
@@ -264,6 +289,11 @@ def post_eval(data, params, replot_runtimeplots=False):
     plt.ylabel(r'Norm of Weights ($||w||$)', fontsize=fontsize)
     plt.title('Norm of Weights Over Trajectory\n'+r'($p2p$'+'={:.3f})'.format(np.ptp(w_mean_norms)), fontsize=fontsize)
     plt.tick_params(axis='both', which='major', labelsize=fontsize)
+    locs, _ = plt.xticks()
+    if locs[-1] >= 10000:
+        newlocs = [loc for loc in locs if loc >= 0 and loc < len(w_mean_norms)]
+        xlabels = [str(int(loc)//1000)+'k' for loc in newlocs]
+        plt.xticks(newlocs, xlabels)
     plt.tight_layout()
     fig.savefig(params['saveto']+'weight_mean_norms.pdf')
     plt.close(fig)
@@ -279,6 +309,11 @@ def post_eval(data, params, replot_runtimeplots=False):
     plt.tick_params(axis='both', which='major', labelsize=fontsize)
     plt.ylabel('Angles in degrees', fontsize=fontsize)
     plt.xlabel('Iteration', fontsize=fontsize)
+    locs, _ = plt.xticks()
+    if locs[-1] >= 10000:
+        newlocs = [loc for loc in locs if loc >= 0 and loc < len(w_mean_angles)]
+        xlabels = [str(int(loc)//1000)+'k' for loc in newlocs]
+        plt.xticks(newlocs, xlabels)
     plt.tight_layout()
     fig.savefig(params['saveto']+'weight_mean_angles.pdf')
     plt.close(fig)
@@ -296,6 +331,11 @@ def post_eval(data, params, replot_runtimeplots=False):
     plt.tick_params(axis='both', which='major', labelsize=fontsize)
     plt.xlabel('Iteration', fontsize=fontsize)
     plt.ylabel(r'Norm of Weights ($||w||$)', fontsize=fontsize)
+    locs, _ = plt.xticks()
+    if locs[-1] >= 10000:
+        newlocs = [loc for loc in locs if loc >= 0 and loc < len(w_closest_norms)]
+        xlabels = [str(int(loc)//1000)+'k' for loc in newlocs]
+        plt.xticks(newlocs, xlabels)
     plt.tight_layout()
     fig.savefig(params['saveto']+'weight_closest_norms.pdf')
     plt.close(fig)
